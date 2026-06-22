@@ -1,0 +1,32 @@
+# Local dev infrastructure for RentLedger.
+# Docker is optional — the domain/rule-engine test suite runs without it.
+# A live Postgres is only needed for migrations, seed, and the HTTP API.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rentledger-postgres
+    environment:
+      POSTGRES_USER: rentledger
+      POSTGRES_PASSWORD: rentledger
+      POSTGRES_DB: rentledger
+    ports:
+      - "5432:5432"
+    volumes:
+      - rentledger-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rentledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rentledger-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - rentledger-redisdata:/data
+
+volumes:
+  rentledger-pgdata:
+  rentledger-redisdata:

@@ -1,0 +1,19 @@
+packages:
+  - "packages/*"
+
+# Skip the pre-run install check. esbuild's skipped postinstall is harmless (its
+# binary ships via the @esbuild/<platform> package), but pnpm 11 treats skipped
+# builds as a fatal install error, which would otherwise break `pnpm test` etc.
+verifyDepsBeforeRun: false
+
+# Build-script decisions (pnpm 11 requires every dep with a build script to be
+# explicitly approved or ignored).
+onlyBuiltDependencies:
+  - esbuild
+
+ignoredBuiltDependencies:
+  - "@scarf/scarf"
+
+allowBuilds:
+  '@scarf/scarf': set this to true or false
+  esbuild: set this to true or false
