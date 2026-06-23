@@ -16,8 +16,8 @@ export function LoginPage() {
   const { login, refreshMe } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('password');
-  const [identifier, setIdentifier] = useState('owner@example.com');
-  const [password, setPassword] = useState('password123');
+  const [identifier, setIdentifier] = useState('test@gmail.com');
+  const [password, setPassword] = useState('test');
   const [code, setCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -138,7 +138,7 @@ export function LoginPage() {
           </Link>
         </p>
         <p className="mt-2 text-xs text-white/30">
-          Demo (after seeding): owner@example.com / password123 ·{' '}
+          Test account: test@gmail.com / test ·{' '}
           <Link to="/accept-invite" className="underline-offset-4 hover:underline">
             Have an invite?
           </Link>

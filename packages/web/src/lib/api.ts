@@ -12,12 +12,6 @@ const REFRESH_KEY = 'rl_refresh';
 let accessToken: string | null = localStorage.getItem(ACCESS_KEY);
 let refreshToken: string | null = localStorage.getItem(REFRESH_KEY);
 
-// In demo mode, seed a session so the authenticated app loads without a backend.
-if (DEMO && !accessToken) {
-  accessToken = 'demo';
-  refreshToken = 'demo';
-}
-
 export function setTokens(access: string, refresh: string): void {
   accessToken = access;
   refreshToken = refresh;

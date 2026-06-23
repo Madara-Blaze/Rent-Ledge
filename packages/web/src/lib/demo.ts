@@ -13,7 +13,7 @@ const M = (amountMinor: string) => ({ amountMinor, currency: 'INR' });
 
 // ---- seed store (mutable) ----
 const store = {
-  user: { id: 'u-owner', name: 'Aarav Thakkar', email: 'aarav@example.com', phone: '+919800000000', panValid: true, panLast4: '234F' },
+  user: { id: 'u-owner', name: 'Test User', email: 'test@gmail.com', phone: '+919800000000', panValid: true, panLast4: '234F' },
   workspace: { landlordId: 'ws-1', name: 'Thakkar Properties', roles: ['OWNER'] },
   portfolios: [{ id: 'pf-1', name: 'Mumbai residential', landlordId: 'ws-1' }] as Record<string, unknown>[],
   properties: [
@@ -125,6 +125,27 @@ function notFound(): never {
   throw Object.assign(new Error('Demo endpoint not implemented'), { status: 404 });
 }
 
+// ---- demo auth: credential-aware login/signup with a localStorage session ----
+const SESSION_KEY = 'rl_demo_session';
+interface DemoAccount { email: string; password: string }
+const accounts: DemoAccount[] = [{ email: 'test@gmail.com', password: 'test' }];
+
+function getSession(): string | null {
+  try { return localStorage.getItem(SESSION_KEY); } catch { return null; }
+}
+function setSession(email: string): void {
+  try { localStorage.setItem(SESSION_KEY, email); } catch { /* ignore */ }
+}
+function clearSession(): void {
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+}
+function authFail(message: string, status = 401): never {
+  throw Object.assign(new Error(message), { status });
+}
+function authTokens() {
+  return { accessToken: 'demo', refreshToken: 'demo', tokenType: 'Bearer', expiresIn: 900, user: store.user, landlordId: 'ws-1' };
+}
+
 /** Returns a string for CSV endpoints, otherwise a JSON-able value. */
 export async function demoFetch(rawPath: string, method = 'GET', body?: Record<string, unknown>): Promise<unknown> {
   const [path, qs = ''] = rawPath.split('?');
@@ -132,13 +153,55 @@ export async function demoFetch(rawPath: string, method = 'GET', body?: Record<s
   const b = body ?? {};
   const seg = path.split('/').filter(Boolean); // e.g. ['tenancies','ten-1','ledger']
 
-  // --- auth ---
-  if (path === '/auth/me') return { user: store.user, workspaces: [store.workspace], tenancies: [] };
-  if (path === '/auth/login' || path === '/auth/signup' || path === '/auth/otp/verify' || path === '/auth/invitations/accept')
-    return { accessToken: 'demo', refreshToken: 'demo', tokenType: 'Bearer', expiresIn: 900, user: store.user, landlordId: 'ws-1' };
+  // --- auth (credential-aware; session persisted in localStorage) ---
+  if (path === '/auth/login') {
+    const identifier = String(b.identifier ?? '').trim().toLowerCase();
+    const password = String(b.password ?? '');
+    const acct = accounts.find((a) => a.email.toLowerCase() === identifier && a.password === password);
+    if (!acct) authFail('Invalid email or password');
+    store.user.email = acct.email;
+    setSession(acct.email);
+    return authTokens();
+  }
+  if (path === '/auth/signup') {
+    const email = String(b.email ?? '').trim().toLowerCase();
+    const password = String(b.password ?? '');
+    if (!email || !password) authFail('Email and password are required', 400);
+    if (accounts.some((a) => a.email.toLowerCase() === email)) authFail('An account with that email already exists', 409);
+    accounts.push({ email, password });
+    if (b.name) store.user.name = String(b.name);
+    store.user.email = email;
+    setSession(email);
+    return authTokens();
+  }
+  if (path === '/auth/otp/verify') {
+    const identifier = String(b.identifier ?? '').trim().toLowerCase();
+    if (String(b.code ?? '') !== '123456') authFail('Invalid or expired code');
+    const acct = accounts.find((a) => a.email.toLowerCase() === identifier);
+    if (acct) store.user.email = acct.email;
+    setSession(identifier || store.user.email);
+    return authTokens();
+  }
+  if (path === '/auth/invitations/accept') {
+    if (!b.token) authFail('Invalid invitation token', 400);
+    setSession(store.user.email);
+    return authTokens();
+  }
   if (path === '/auth/otp/request') return { sent: true, devCode: '123456' };
-  if (path === '/auth/refresh') return { accessToken: 'demo', refreshToken: 'demo', tokenType: 'Bearer', expiresIn: 900, user: store.user };
-  if (path === '/auth/logout') return { loggedOut: true };
+  if (path === '/auth/refresh') {
+    if (!getSession()) authFail('Session expired');
+    return authTokens();
+  }
+  if (path === '/auth/logout') {
+    clearSession();
+    return { loggedOut: true };
+  }
+  if (path === '/auth/me') {
+    const email = getSession();
+    if (!email) authFail('Not authenticated');
+    store.user.email = email;
+    return { user: store.user, workspaces: [store.workspace], tenancies: [] };
+  }
   if (path === '/auth/kyc/pan') {
     store.user.panValid = true;
     store.user.panLast4 = String(b.pan ?? 'XXXX234F').slice(-4);
