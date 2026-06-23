@@ -41,6 +41,17 @@ const DEMO_PASSWORD = 'password123';
 
 async function main(): Promise<void> {
   loadEnv();
+
+  // SECURITY (§1.2): demo/seed data (incl. the `password123` logins) must never
+  // reach a production database. Refuse unless explicitly overridden.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+    console.error(
+      'Refusing to seed: NODE_ENV=production. Seeding demo credentials in production is unsafe. ' +
+        'Set ALLOW_SEED=true only if you are absolutely certain this is a throwaway environment.',
+    );
+    process.exit(1);
+  }
+
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
   const db = app.get<Db>(DRIZZLE);
   const invoicing = app.get(InvoicingService);
