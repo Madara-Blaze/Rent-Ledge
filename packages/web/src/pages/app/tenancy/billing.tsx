@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { TenancyGate } from '@/components/app/tenancy-gate';
 import {
   Badge,
@@ -13,8 +13,9 @@ import {
   StatusBadge,
   useRun,
 } from '@/components/dashboard/primitives';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/lib/api';
+import { apiDownload, apiFetch } from '@/lib/api';
 import { formatDate, formatINR, shortId, titleCase } from '@/lib/format';
 import { useWorkspace } from '@/lib/workspace';
 
@@ -48,6 +49,16 @@ interface LateFeeResult {
   chargeableDays: number;
   fee: Money;
   invoice?: Invoice;
+}
+interface GstPreview {
+  taxableMinor: string;
+  cgstMinor: string;
+  sgstMinor: string;
+  igstMinor: string;
+  totalTaxMinor: string;
+  grossMinor: string;
+  rateBps: number;
+  interState: boolean;
 }
 
 function iso(d: Date) {
@@ -89,6 +100,46 @@ function BillingBody({ tenancyId, canManage }: { tenancyId: string; canManage: b
   const [lateAsOf, setLateAsOf] = useState('');
   const [lateResult, setLateResult] = useState<LateFeeResult | null>(null);
   const lateRun = useRun();
+
+  // GST (commercial)
+  const [supplierGstin, setSupplierGstin] = useState('');
+  const [placeOfSupply, setPlaceOfSupply] = useState('');
+  const [recipientGstin, setRecipientGstin] = useState('');
+  const [gstRatePct, setGstRatePct] = useState('18');
+  const [gstPreview, setGstPreview] = useState<GstPreview | null>(null);
+  const [gstInvoiceIds, setGstInvoiceIds] = useState<Set<string>>(new Set());
+  const gstPreviewRun = useRun();
+  const gstIssueRun = useRun();
+
+  function gstBody() {
+    return {
+      ...body(),
+      supplierGstin: supplierGstin.trim().toUpperCase(),
+      placeOfSupply: placeOfSupply.trim(),
+      recipientGstin: recipientGstin.trim() || undefined,
+      gstRateBps: Math.round(Number(gstRatePct) * 100),
+    };
+  }
+
+  async function doGstPreview() {
+    setGstPreview(null);
+    await gstPreviewRun.run(async () => {
+      const res = await apiFetch<{ rent: Preview } & GstPreview>('/invoices/gst/preview', {
+        method: 'POST',
+        body: JSON.stringify(gstBody()),
+      });
+      setGstPreview(res);
+    });
+  }
+
+  async function doGstIssue() {
+    const ok = await gstIssueRun.run(async () => {
+      const inv = await apiFetch<Invoice>('/invoices/gst', { method: 'POST', body: JSON.stringify(gstBody()) });
+      setInvoices((prev) => [inv, ...prev]);
+      setGstInvoiceIds((prev) => new Set(prev).add(inv.id));
+    });
+    if (ok) setGstPreview(null);
+  }
 
   function body() {
     return {
@@ -174,14 +225,74 @@ function BillingBody({ tenancyId, canManage }: { tenancyId: string; canManage: b
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card title="GST tax invoice (commercial)" description="18% GST on commercial rent. CGST+SGST intra-state, IGST inter-state — split from the place of supply.">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Supplier GSTIN" value={supplierGstin} onChange={setSupplierGstin} placeholder="29ABCDE1234F1Z5" />
+            <Field label="Place of supply" value={placeOfSupply} onChange={setPlaceOfSupply} placeholder="State code, e.g. 29" hint="Property's 2-digit state code" />
+            <Field label="Recipient GSTIN (optional)" value={recipientGstin} onChange={setRecipientGstin} placeholder="27AAAAA0000A1Z5" />
+            <Field label="GST rate (%)" value={gstRatePct} onChange={setGstRatePct} type="number" />
+          </div>
+          <p className="mt-2 text-xs text-white/30">Uses the period &amp; due date from the rent invoice above.</p>
+          <div className="mt-3 flex gap-2">
+            <Button variant="outline" size="sm" disabled={gstPreviewRun.busy || !supplierGstin || !placeOfSupply} onClick={() => void doGstPreview()}>
+              {gstPreviewRun.busy ? 'Previewing…' : 'Preview GST'}
+            </Button>
+            {canManage && gstPreview && (
+              <Button variant="primary" size="sm" disabled={gstIssueRun.busy} onClick={() => void doGstIssue()}>
+                {gstIssueRun.busy ? 'Issuing…' : `Issue GST invoice · ${formatINR(gstPreview.grossMinor)}`}
+              </Button>
+            )}
+          </div>
+          <ErrorText>{gstPreviewRun.error ?? gstIssueRun.error}</ErrorText>
+        </Card>
+
+        <Card title="GST breakdown">
+          {gstPreview ? (
+            <KeyValue
+              items={[
+                ['Taxable value', formatINR(gstPreview.taxableMinor)] as [string, ReactNode],
+                ['Supply type', gstPreview.interState ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)'],
+                ...(gstPreview.interState
+                  ? [['IGST', formatINR(gstPreview.igstMinor)] as [string, ReactNode]]
+                  : [
+                      ['CGST', formatINR(gstPreview.cgstMinor)] as [string, ReactNode],
+                      ['SGST', formatINR(gstPreview.sgstMinor)] as [string, ReactNode],
+                    ]),
+                ['Total tax', formatINR(gstPreview.totalTaxMinor)],
+                ['Invoice total', <span className="font-semibold text-white">{formatINR(gstPreview.grossMinor)}</span>],
+              ]}
+            />
+          ) : (
+            <Empty>Preview a GST invoice to see the CGST/SGST or IGST split.</Empty>
+          )}
+        </Card>
+      </div>
+
       <Card title="Invoices issued this session" description="The API does not expose a historical invoice list; these are invoices you created here.">
         <DataTable
           columns={[
             { header: 'Number', render: (i: Invoice) => <span className="font-mono text-xs">{i.number}</span> },
-            { header: 'Kind', render: (i: Invoice) => <Badge tone="blue">{titleCase(i.kind)}</Badge> },
+            { header: 'Kind', render: (i: Invoice) => <Badge tone="blue">{gstInvoiceIds.has(i.id) ? 'GST' : titleCase(i.kind)}</Badge> },
             { header: 'Due', render: (i: Invoice) => formatDate(i.dueDate) },
             { header: 'Status', render: (i: Invoice) => <StatusBadge status={i.status} /> },
             { header: 'Amount', align: 'right', render: (i: Invoice) => formatINR(i.amount.amountMinor) },
+            {
+              header: 'Tax invoice',
+              align: 'right',
+              render: (i: Invoice) =>
+                gstInvoiceIds.has(i.id) ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void apiDownload(`/invoices/${i.id}/tax-invoice.pdf`, `tax-invoice-${i.number}.pdf`)}
+                  >
+                    <Download className="size-3.5" /> PDF
+                  </Button>
+                ) : (
+                  <span className="text-white/20">—</span>
+                ),
+            },
           ]}
           rows={invoices}
           keyOf={(i) => i.id}

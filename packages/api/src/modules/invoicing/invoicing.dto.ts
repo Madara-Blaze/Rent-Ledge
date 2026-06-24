@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { MoneyDto } from '../../common/money.util';
 
 export class CreateRentInvoiceDto {
@@ -42,6 +42,40 @@ export class InvoiceDto {
   @ApiProperty({ type: MoneyDto }) amount!: MoneyDto;
   @ApiProperty({ example: 'OPEN' }) status!: string;
   @ApiPropertyOptional() journalEntryId?: string | null;
+}
+
+export class CreateGstInvoiceDto extends CreateRentInvoiceDto {
+  @ApiProperty({ example: '29ABCDE1234F1Z5', description: "Supplier (landlord) GSTIN" })
+  @IsString()
+  supplierGstin!: string;
+  @ApiProperty({ example: '29', description: "Place of supply — property's 2-digit state code" })
+  @IsString()
+  placeOfSupply!: string;
+  @ApiPropertyOptional({ example: '27AAAAA0000A1Z5', description: 'Recipient (tenant) GSTIN, for B2B' })
+  @IsOptional()
+  @IsString()
+  recipientGstin?: string;
+  @ApiPropertyOptional({ example: 1800, description: 'GST rate in basis points (default 1800 = 18%)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  gstRateBps?: number;
+  @ApiPropertyOptional({ example: '997212', description: 'SAC code (default: rental of commercial property)' })
+  @IsOptional()
+  @IsString()
+  hsnSac?: string;
+}
+
+export class GstInvoicePreviewDto {
+  @ApiProperty({ type: InvoicePreviewDto }) rent!: InvoicePreviewDto;
+  @ApiProperty() taxableMinor!: string;
+  @ApiProperty() cgstMinor!: string;
+  @ApiProperty() sgstMinor!: string;
+  @ApiProperty() igstMinor!: string;
+  @ApiProperty() totalTaxMinor!: string;
+  @ApiProperty() grossMinor!: string;
+  @ApiProperty() rateBps!: number;
+  @ApiProperty() interState!: boolean;
 }
 
 export class ApplyLateFeeDto {

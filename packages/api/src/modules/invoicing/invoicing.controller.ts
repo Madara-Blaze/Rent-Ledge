@@ -1,11 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, StreamableFile } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUser, CurrentUser } from '../../common/auth/current-user.decorator';
 import { AccessService } from '../rbac/access.service';
 import { MANAGE_ROLES, READ_ROLES_WITH_TENANT } from '../rbac/roles';
 import {
   ApplyLateFeeDto,
+  CreateGstInvoiceDto,
   CreateRentInvoiceDto,
+  GstInvoicePreviewDto,
   InvoiceDto,
   InvoicePreviewDto,
   LateFeeResultDto,
@@ -41,5 +43,32 @@ export class InvoicingController {
     const tenancyId = await this.svc.tenancyIdForInvoice(dto.invoiceId);
     await this.access.assertTenancyAccess(user.userId, tenancyId, MANAGE_ROLES);
     return this.svc.applyLateFee(dto);
+  }
+
+  @Post('gst/preview')
+  @ApiOperation({ summary: 'Dry-run a GST tax invoice (CGST/SGST or IGST breakdown), no writes' })
+  async gstPreview(@Body() dto: CreateGstInvoiceDto, @CurrentUser() user: AuthUser): Promise<GstInvoicePreviewDto> {
+    await this.access.assertTenancyAccess(user.userId, dto.tenancyId, READ_ROLES_WITH_TENANT);
+    return this.svc.gstPreview(dto);
+  }
+
+  @Post('gst')
+  @ApiOperation({ summary: 'Issue a GST tax invoice (commercial let) and post it to the ledger' })
+  async createGst(@Body() dto: CreateGstInvoiceDto, @CurrentUser() user: AuthUser): Promise<InvoiceDto> {
+    await this.access.assertTenancyAccess(user.userId, dto.tenancyId, MANAGE_ROLES);
+    return this.svc.createGstInvoice(dto);
+  }
+
+  @Get(':id/tax-invoice.pdf')
+  @ApiOperation({ summary: 'Download a GST tax invoice (PDF)' })
+  async taxInvoice(@Param('id') id: string, @CurrentUser() user: AuthUser): Promise<StreamableFile> {
+    const tenancyId = await this.svc.tenancyIdForInvoice(id);
+    await this.access.assertTenancyAccess(user.userId, tenancyId, READ_ROLES_WITH_TENANT);
+    const { bytes, fileName } = await this.svc.buildTaxInvoice(id);
+    return new StreamableFile(bytes, {
+      type: 'application/pdf',
+      disposition: `attachment; filename="${fileName}"`,
+      length: bytes.length,
+    });
   }
 }
