@@ -12,7 +12,17 @@ interface Tenancy {
   propertyId: string;
   rentMinor: string;
   status: string;
+  endDate: string | null;
 }
+interface Expiry {
+  tenancyId: string;
+  propertyName: string;
+  endDate: string;
+  daysLeft: number;
+}
+
+const ENDED = new Set(['TERMINATED', 'ENDED', 'EVICTED']);
+const EXPIRY_WINDOW_DAYS = 60;
 interface Arrears {
   totalOutstanding: string;
 }
@@ -36,6 +46,7 @@ export function PortfolioTab({ landlordId }: { landlordId: string | null }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [income, setIncome] = useState<IncomeStatement | null>(null);
   const [totals, setTotals] = useState({ rentRoll: 0n, outstanding: 0n, active: 0 });
+  const [expiries, setExpiries] = useState<Expiry[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async (lid: string) => {
@@ -81,6 +92,18 @@ export function PortfolioTab({ landlordId }: { landlordId: string | null }) {
       });
       setRows([...byProp.values()]);
       setTotals({ rentRoll, outstanding, active });
+
+      // Lease expiries within the window (and any lapsed but not yet transitioned).
+      const todayMs = Date.now();
+      const expiring = tenancies
+        .filter((t) => t.endDate && !ENDED.has(t.status))
+        .map((t) => {
+          const daysLeft = Math.ceil((new Date(t.endDate as string).getTime() - todayMs) / 86_400_000);
+          return { tenancyId: t.id, propertyName: byProp.get(t.propertyId)?.name ?? 'Property', endDate: t.endDate as string, daysLeft };
+        })
+        .filter((e) => e.daysLeft <= EXPIRY_WINDOW_DAYS)
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+      setExpiries(expiring);
     } finally {
       setLoading(false);
     }
@@ -135,6 +158,26 @@ export function PortfolioTab({ landlordId }: { landlordId: string | null }) {
               </tbody>
             </table>
           </div>
+        )}
+      </Card>
+
+      <Card title="Upcoming lease expiries">
+        {expiries.length === 0 ? (
+          <Empty>No leases ending in the next {EXPIRY_WINDOW_DAYS} days.</Empty>
+        ) : (
+          <ul className="divide-y divide-white/[0.06]">
+            {expiries.map((e) => (
+              <li key={e.tenancyId} className="flex items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="font-medium text-white/90">{e.propertyName}</p>
+                  <p className="mt-0.5 text-xs text-white/40">Ends {e.endDate} · #{e.tenancyId.slice(0, 8)}</p>
+                </div>
+                <span className={`text-sm tabular-nums ${e.daysLeft <= 0 ? 'text-[#FF6b6b]' : e.daysLeft <= 14 ? 'text-amber-400/90' : 'text-white/60'}`}>
+                  {e.daysLeft <= 0 ? 'Lapsed' : `${e.daysLeft} day${e.daysLeft === 1 ? '' : 's'} left`}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
     </div>

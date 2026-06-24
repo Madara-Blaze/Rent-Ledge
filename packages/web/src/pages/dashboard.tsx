@@ -8,6 +8,7 @@ import { HouseRulesTab } from '@/components/dashboard/house-rules-tab';
 import { MaintenanceTab } from '@/components/dashboard/maintenance-tab';
 import { NoticesTab } from '@/components/dashboard/notices-tab';
 import { OverviewTab } from '@/components/dashboard/overview-tab';
+import { PaymentsTab } from '@/components/dashboard/payments-tab';
 import { PortfolioTab } from '@/components/dashboard/portfolio-tab';
 import { PropertiesTab } from '@/components/dashboard/properties-tab';
 import { RemindersTab } from '@/components/dashboard/reminders-tab';
@@ -28,6 +29,7 @@ type Tab =
   | 'tenancies'
   | 'reminders'
   | 'overview'
+  | 'payments'
   | 'agreements'
   | 'documents'
   | 'maintenance'
@@ -46,6 +48,7 @@ const WORKSPACE_TABS: { key: Tab; label: string }[] = [
 ];
 const TENANCY_TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
+  { key: 'payments', label: 'Payments' },
   { key: 'agreements', label: 'Agreements' },
   { key: 'documents', label: 'Documents' },
   { key: 'maintenance', label: 'Maintenance' },
@@ -156,6 +159,7 @@ export function Dashboard() {
           {tab === 'tenancies' && <TenanciesTab landlordId={landlordId} onChanged={() => void reloadTenancies()} />}
           {tab === 'reminders' && <RemindersTab landlordId={landlordId} />}
           {tab === 'overview' && <OverviewTab tenancyId={selected} />}
+          {tab === 'payments' && <PaymentsTab tenancyId={selected} />}
           {tab === 'agreements' && <AgreementsTab tenancyId={selected} />}
           {tab === 'documents' && <DocumentsTab tenancyId={selected} />}
           {tab === 'maintenance' && <MaintenanceTab landlordId={landlordId} tenancyId={selected} />}

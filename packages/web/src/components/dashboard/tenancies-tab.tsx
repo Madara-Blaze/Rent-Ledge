@@ -122,6 +122,7 @@ export function TenanciesTab({
   const [deposit, setDeposit] = useState('');
   const [billingDay, setBillingDay] = useState('1');
   const [startDate, setStartDate] = useState(today());
+  const [endDate, setEndDate] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -179,6 +180,7 @@ export function TenanciesTab({
           depositMinor,
           billingDay: Number(billingDay),
           startDate,
+          endDate: endDate || undefined,
         }),
       });
       setTenantName('');
@@ -186,6 +188,7 @@ export function TenanciesTab({
       setTenantPhone('');
       setRent('');
       setDeposit('');
+      setEndDate('');
       await load(landlordId);
       onChanged?.();
     } catch (e) {
@@ -242,6 +245,7 @@ export function TenanciesTab({
               <Field label="Security deposit (₹, optional)" value={deposit} onChange={setDeposit} placeholder="e.g. 110000" />
               <Select label="Billing day" value={billingDay} onChange={setBillingDay} options={dayOptions} />
               <Field label="Start date" value={startDate} onChange={setStartDate} type="date" />
+              <Field label="Lease end date (optional)" value={endDate} onChange={setEndDate} type="date" />
             </div>
             {error && <p className="mt-3 text-sm text-[#FF0000]">{error}</p>}
             <Button
