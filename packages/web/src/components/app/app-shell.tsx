@@ -1,10 +1,12 @@
 import {
   BarChart3,
+  BellRing,
   BookText,
   Building2,
   ClipboardCheck,
   CreditCard,
   FileSignature,
+  FileText,
   Gavel,
   LayoutDashboard,
   Lock,
@@ -49,6 +51,7 @@ const WORKSPACE_NAV: NavItem[] = [
   { to: '/app/evidence', label: 'Evidence vault', icon: ShieldCheck },
   { to: '/app/disputes', label: 'Disputes', icon: Gavel },
   { to: '/app/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/app/reminders', label: 'Rent reminders', icon: BellRing },
   { to: '/app/team', label: 'Team & access', icon: UserCog },
   { to: '/app/audit', label: 'Audit log', icon: ScrollText },
 ];
@@ -59,6 +62,7 @@ const TENANCY_NAV: NavItem[] = [
   { to: '/app/t/payments', label: 'Payments', icon: CreditCard },
   { to: '/app/t/deposit', label: 'Deposit', icon: PiggyBank },
   { to: '/app/t/agreements', label: 'Agreements', icon: FileSignature },
+  { to: '/app/t/documents', label: 'Documents', icon: FileText },
   { to: '/app/t/notices', label: 'Notices', icon: Mail },
   { to: '/app/t/house-rules', label: 'House rules', icon: BookText },
   { to: '/app/t/inspections', label: 'Inspections', icon: ClipboardCheck },

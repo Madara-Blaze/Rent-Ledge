@@ -75,6 +75,7 @@ export function TenanciesPage() {
   const [deposit, setDeposit] = useState('');
   const [billingDay, setBillingDay] = useState('1');
   const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const createForm = useRun();
 
   // transition confirm
@@ -135,6 +136,7 @@ export function TenanciesPage() {
           depositMinor: depositMinor ?? '0',
           billingDay: Number(billingDay),
           startDate,
+          endDate: endDate || undefined,
         }),
       });
     });
@@ -147,6 +149,7 @@ export function TenanciesPage() {
       setRent('');
       setDeposit('');
       setStartDate('');
+      setEndDate('');
       await reloadTenancies();
     }
   }
@@ -373,6 +376,7 @@ export function TenanciesPage() {
               />
               <Field label="Billing day" value={billingDay} onChange={setBillingDay} type="number" />
               <Field label="Start date" value={startDate} onChange={setStartDate} type="date" />
+              <Field label="Lease end date (optional)" value={endDate} onChange={setEndDate} type="date" />
             </div>
             <ErrorText>{createForm.error}</ErrorText>
           </>

@@ -1,13 +1,16 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { desc, eq, sql } from 'drizzle-orm';
+import { decryptField } from '../../common/crypto/field-encryption';
 import { AccountCode } from '../../domain/ledger/accounts';
 import { JournalEntryDraft, LedgerEntryType } from '../../domain/ledger/journal';
 import { Money } from '../../domain/money/money';
 import { DRIZZLE, type Db } from '../../infra/db/db.module';
-import { paymentAllocations, payments, invoices } from '../../infra/db/schema';
+import { landlords, paymentAllocations, payments, invoices, properties, tenants, users } from '../../infra/db/schema';
 import { LedgerRepository } from '../ledger/ledger.repository';
 import { TenancyRepository, TenancyRow } from '../tenancy/tenancy.repository';
 import { PaymentDto, RecordPaymentDto } from './payments.dto';
+import { buildRentReceiptPdf } from './receipt';
 import {
   GatewayWebhookEvent,
   PAYMENT_GATEWAY,
@@ -30,7 +33,81 @@ export class PaymentsService {
     @Inject(PAYMENT_GATEWAY) private readonly gateway: PaymentGateway,
     private readonly tenancyRepo: TenancyRepository,
     private readonly ledger: LedgerRepository,
+    private readonly config: ConfigService,
   ) {}
+
+  /** Payment history for a tenancy (newest first). */
+  async listPayments(tenancyId: string) {
+    const rows = await this.db
+      .select()
+      .from(payments)
+      .where(eq(payments.tenancyId, tenancyId))
+      .orderBy(desc(payments.receivedAt));
+    return rows.map((p) => ({
+      id: p.id,
+      method: p.method,
+      amountMinor: p.amountMinor.toString(),
+      tdsMinor: p.tdsMinor.toString(),
+      currency: p.currency,
+      status: p.status,
+      reference: p.reference,
+      receivedAt: p.receivedAt,
+    }));
+  }
+
+  async getPaymentRow(paymentId: string): Promise<PaymentRow> {
+    const [row] = await this.db.select().from(payments).where(eq(payments.id, paymentId)).limit(1);
+    if (!row) throw new NotFoundException(`Payment ${paymentId} not found`);
+    return row;
+  }
+
+  /** Build an HRA-ready rent-receipt PDF for a payment. */
+  async buildReceipt(paymentId: string): Promise<{ bytes: Buffer; fileName: string; tenancyId: string }> {
+    const pay = await this.getPaymentRow(paymentId);
+    const tenancy = await this.tenancyRepo.findByIdOrThrow(pay.tenancyId);
+
+    const [landlord] = await this.db.select().from(landlords).where(eq(landlords.id, tenancy.landlordId)).limit(1);
+    const [property] = await this.db.select().from(properties).where(eq(properties.id, tenancy.propertyId)).limit(1);
+    const [tenant] = await this.db.select().from(tenants).where(eq(tenants.id, tenancy.primaryTenantId)).limit(1);
+
+    // Landlord PAN (for HRA) lives encrypted on the workspace owner's user record.
+    let landlordPan: string | null = null;
+    if (landlord?.ownerUserId) {
+      const [owner] = await this.db.select().from(users).where(eq(users.id, landlord.ownerUserId)).limit(1);
+      if (owner?.panEncrypted) {
+        try {
+          landlordPan = decryptField(owner.panEncrypted, this.config.getOrThrow<string>('FIELD_ENCRYPTION_KEY'));
+        } catch {
+          landlordPan = null; // never block a receipt on a decrypt failure
+        }
+      }
+    }
+
+    // Period covered, from the invoices this payment was allocated to.
+    const periodRows = await this.db
+      .select({ start: sql<string | null>`min(${invoices.periodStart})`, end: sql<string | null>`max(${invoices.periodEnd})` })
+      .from(paymentAllocations)
+      .innerJoin(invoices, eq(invoices.id, paymentAllocations.invoiceId))
+      .where(eq(paymentAllocations.paymentId, pay.id));
+    const period = periodRows[0];
+    const periodLabel = period?.start ? `${period.start}${period.end ? ` to ${period.end}` : ''}` : null;
+
+    const date = (pay.receivedAt instanceof Date ? pay.receivedAt : new Date(pay.receivedAt)).toISOString().slice(0, 10);
+    const bytes = buildRentReceiptPdf({
+      receiptNo: `RCPT-${pay.id.slice(0, 8).toUpperCase()}`,
+      date,
+      landlordName: landlord?.name ?? 'Landlord',
+      landlordPan,
+      tenantName: tenant?.name ?? 'Tenant',
+      propertyName: property?.name ?? 'Property',
+      propertyAddress: property?.address ?? null,
+      amountMinor: pay.amountMinor.toString(),
+      method: pay.method,
+      periodLabel,
+      reference: pay.reference,
+    });
+    return { bytes, fileName: `rent-receipt-${pay.id.slice(0, 8)}.pdf`, tenancyId: pay.tenancyId };
+  }
 
   /**
    * Record a payment: settle invoices (explicit allocations or oldest-first),

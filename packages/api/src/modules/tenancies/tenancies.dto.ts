@@ -39,6 +39,10 @@ export class CreateTenancyDto {
   @ApiPropertyOptional({ example: '5500000' }) @IsOptional() @Matches(MINOR) depositMinor?: string;
   @ApiPropertyOptional({ example: 1 }) @IsOptional() @IsInt() @Min(1) @Max(28) billingDay?: number;
   @ApiProperty({ example: '2026-06-01' }) @IsDateString() startDate!: string;
+  @ApiPropertyOptional({ example: '2027-05-31', description: 'Lease end date (drives expiry alerts)' })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
   @ApiPropertyOptional({ description: 'EscalationSchedule (type/rateBps/frequencyMonths/startDate/...)' })
   @IsOptional()
   @IsObject()

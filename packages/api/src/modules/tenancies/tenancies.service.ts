@@ -62,6 +62,7 @@ export class TenanciesService {
         depositMinor: BigInt(dto.depositMinor ?? '0'),
         billingDay: dto.billingDay ?? 1,
         startDate: dto.startDate,
+        endDate: dto.endDate ?? null,
         escalation: dto.escalation ?? null,
         status: dto.status ?? 'DRAFT',
       })

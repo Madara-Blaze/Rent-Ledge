@@ -12,6 +12,7 @@ import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 import { DpdpModule } from './modules/dpdp/dpdp.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { HouseRulesModule } from './modules/house-rules/house-rules.module';
@@ -22,6 +23,7 @@ import { NoticesModule } from './modules/notices/notices.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PolicyModule } from './modules/policy/policy.module';
 import { PropertiesModule } from './modules/properties/properties.module';
+import { RemindersModule } from './modules/reminders/reminders.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { TaxModule } from './modules/tax/tax.module';
@@ -54,6 +56,8 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
     EvidenceModule,
     NoticesModule,
     HouseRulesModule,
+    DocumentsModule,
+    RemindersModule,
     // Phase 6: compliance
     DpdpModule,
   ],

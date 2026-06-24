@@ -33,7 +33,12 @@ export const envSchema = z
     // Optional knobs for hardened deployments.
     ALLOW_SEED: z.string().optional(),
 
-    DEFAULT_JURISDICTION: z.string().default('IN'),
+    // Lease document storage. Dev/default uses the local filesystem behind a
+  // pluggable adapter; prod swaps in object storage (Supabase Storage / S3).
+  DOCUMENT_STORAGE_DIR: z.string().default('.storage'),
+  MAX_UPLOAD_MB: z.coerce.number().int().positive().default(15),
+
+  DEFAULT_JURISDICTION: z.string().default('IN'),
     DEFAULT_CURRENCY: z.string().default('INR'),
     DEFAULT_LOCALE: z.string().default('en-IN'),
     DEFAULT_TIMEZONE: z.string().default('Asia/Kolkata'),
