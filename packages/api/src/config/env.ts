@@ -16,6 +16,11 @@ export const envSchema = z.object({
   JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2_592_000),
   FIELD_ENCRYPTION_KEY: z.string().default('dev-field-encryption-key-change-me'),
 
+  // Lease document storage. Dev/default uses the local filesystem behind a
+  // pluggable adapter; prod swaps in object storage (Supabase Storage / S3).
+  DOCUMENT_STORAGE_DIR: z.string().default('.storage'),
+  MAX_UPLOAD_MB: z.coerce.number().int().positive().default(15),
+
   DEFAULT_JURISDICTION: z.string().default('IN'),
   DEFAULT_CURRENCY: z.string().default('INR'),
   DEFAULT_LOCALE: z.string().default('en-IN'),

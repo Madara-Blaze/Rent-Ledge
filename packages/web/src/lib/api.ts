@@ -79,6 +79,24 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, retry
   return (await res.json()) as T;
 }
 
+/** POST multipart/form-data (file uploads) with auth + one transparent refresh. */
+export async function apiUpload<T>(path: string, form: FormData, retry = true): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`; // let the browser set the multipart boundary
+
+  const res = await fetch(`${BASE}${path}`, { method: 'POST', body: form, headers });
+
+  if (res.status === 401 && retry) {
+    if (await tryRefresh()) return apiUpload<T>(path, form, false);
+  }
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+    throw new ApiError(body?.error?.message ?? res.statusText, res.status, body);
+  }
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
 /** Fetch a file (e.g. CSV) with auth and trigger a browser download. */
 export async function apiDownload(path: string, filename: string): Promise<void> {
   const headers: Record<string, string> = {};
