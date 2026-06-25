@@ -51,6 +51,10 @@ export enum AccountCode {
   MAINTENANCE_EXPENSE = 'MAINTENANCE_EXPENSE',
   /** Uncollectable balances written off. */
   WRITE_OFF_EXPENSE = 'WRITE_OFF_EXPENSE',
+  /** GST collected on commercial rent, owed to the government (output tax). */
+  CGST_PAYABLE = 'CGST_PAYABLE',
+  SGST_PAYABLE = 'SGST_PAYABLE',
+  IGST_PAYABLE = 'IGST_PAYABLE',
 }
 
 export const ACCOUNT_TYPE: Record<AccountCode, AccountType> = {
@@ -67,6 +71,9 @@ export const ACCOUNT_TYPE: Record<AccountCode, AccountType> = {
   [AccountCode.MAINTENANCE_RECOVERY_INCOME]: 'INCOME',
   [AccountCode.MAINTENANCE_EXPENSE]: 'EXPENSE',
   [AccountCode.WRITE_OFF_EXPENSE]: 'EXPENSE',
+  [AccountCode.CGST_PAYABLE]: 'LIABILITY',
+  [AccountCode.SGST_PAYABLE]: 'LIABILITY',
+  [AccountCode.IGST_PAYABLE]: 'LIABILITY',
 };
 
 export function accountTypeOf(code: AccountCode): AccountType {

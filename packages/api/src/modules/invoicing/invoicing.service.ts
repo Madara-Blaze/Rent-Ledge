@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { Pool } from 'pg';
 import { moneyToDto } from '../../common/money.util';
@@ -9,18 +9,22 @@ import { isoDate } from '../../domain/policy/jurisdiction-policy';
 import { EscalationSchedule, escalatedRent } from '../../domain/rules/escalation';
 import { computeLateFee } from '../../domain/rules/late-fee';
 import { prorateRent } from '../../domain/rules/proration';
+import { computeGst, type GstBreakdown, isInterState, isValidGstin } from '../../domain/tax/gst';
 import { DRIZZLE, PG_POOL, type Db } from '../../infra/db/db.module';
-import { invoices } from '../../infra/db/schema';
+import { invoices, landlords, properties, tenants } from '../../infra/db/schema';
 import { LedgerRepository } from '../ledger/ledger.repository';
 import { PolicyService } from '../policy/policy.service';
 import { StoredEscalation, TenancyRepository, TenancyRow } from '../tenancy/tenancy.repository';
 import {
   ApplyLateFeeDto,
+  CreateGstInvoiceDto,
   CreateRentInvoiceDto,
+  GstInvoicePreviewDto,
   InvoiceDto,
   InvoicePreviewDto,
   LateFeeResultDto,
 } from './invoicing.dto';
+import { buildTaxInvoicePdf } from './tax-invoice';
 
 const parseDate = (iso: string): Date => new Date(`${iso}T00:00:00Z`);
 
@@ -84,6 +88,125 @@ export class InvoicingService {
         .returning();
       return this.rowToDto(inv);
     });
+  }
+
+  /** Dry-run a GST tax invoice: rent breakdown + CGST/SGST or IGST split. */
+  async gstPreview(input: CreateGstInvoiceDto): Promise<GstInvoicePreviewDto> {
+    const { rentPreview, gst } = await this.computeGstFor(input);
+    return { rent: rentPreview, ...gst };
+  }
+
+  /** Issue a GST tax invoice for a commercial let and post it (with tax liability) to the ledger. */
+  async createGstInvoice(input: CreateGstInvoiceDto): Promise<InvoiceDto> {
+    const { tenancy, amount, gst } = await this.computeGstFor(input);
+    const currency = tenancy.currency;
+    const occurredAt = parseDate(input.periodStart);
+    const gross = Money.of(gst.grossMinor, currency);
+
+    return this.db.transaction(async (txRaw) => {
+      const tx = txRaw as unknown as Db;
+      const draft = new JournalEntryDraft({
+        entryType: LedgerEntryType.INVOICE,
+        occurredAt,
+        currency,
+        landlordId: tenancy.landlordId,
+        tenancyId: tenancy.id,
+        description: `GST rent ${input.periodStart}..${input.periodEnd}`,
+        sourceType: 'invoice',
+        idempotencyKey: input.idempotencyKey,
+      });
+      draft.debit(this.acct(AccountCode.RENT_RECEIVABLE, tenancy), gross);
+      draft.credit(this.acct(AccountCode.RENT_INCOME, tenancy), amount);
+      if (gst.interState) {
+        draft.credit(this.acct(AccountCode.IGST_PAYABLE, tenancy), Money.of(gst.igstMinor, currency));
+      } else {
+        draft.credit(this.acct(AccountCode.CGST_PAYABLE, tenancy), Money.of(gst.cgstMinor, currency));
+        draft.credit(this.acct(AccountCode.SGST_PAYABLE, tenancy), Money.of(gst.sgstMinor, currency));
+      }
+      const entryId = await this.ledger.postEntry(draft.build(), tx);
+
+      const existing = await tx.select().from(invoices).where(eq(invoices.journalEntryId, entryId)).limit(1);
+      if (existing.length > 0) return this.rowToDto(existing[0]); // idempotent replay
+
+      const number = await this.nextInvoiceNumber(tx, tenancy.landlordId);
+      const [inv] = await tx
+        .insert(invoices)
+        .values({
+          landlordId: tenancy.landlordId,
+          tenancyId: tenancy.id,
+          number,
+          kind: 'RENT',
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
+          dueDate: input.dueDate,
+          currency,
+          amountMinor: gross.amountMinor,
+          status: 'OPEN',
+          taxableMinor: BigInt(gst.taxableMinor),
+          cgstMinor: BigInt(gst.cgstMinor),
+          sgstMinor: BigInt(gst.sgstMinor),
+          igstMinor: BigInt(gst.igstMinor),
+          gstRateBps: gst.rateBps,
+          hsnSac: input.hsnSac ?? '997212',
+          placeOfSupply: input.placeOfSupply,
+          supplierGstin: input.supplierGstin.trim().toUpperCase(),
+          recipientGstin: input.recipientGstin?.trim().toUpperCase() ?? null,
+          journalEntryId: entryId,
+        })
+        .returning();
+      return this.rowToDto(inv);
+    });
+  }
+
+  /** Build a GST-compliant tax-invoice PDF for a previously-issued GST invoice. */
+  async buildTaxInvoice(invoiceId: string): Promise<{ bytes: Buffer; fileName: string; tenancyId: string }> {
+    const [inv] = await this.db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
+    if (!inv) throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    if (inv.gstRateBps == null) throw new BadRequestException('Invoice is not a GST tax invoice');
+
+    const tenancy = await this.tenancyRepo.findByIdOrThrow(inv.tenancyId);
+    const [landlord] = await this.db.select().from(landlords).where(eq(landlords.id, tenancy.landlordId)).limit(1);
+    const [property] = await this.db.select().from(properties).where(eq(properties.id, tenancy.propertyId)).limit(1);
+    const [tenant] = await this.db.select().from(tenants).where(eq(tenants.id, tenancy.primaryTenantId)).limit(1);
+
+    const igst = (inv.igstMinor ?? 0n).toString();
+    const cgst = (inv.cgstMinor ?? 0n).toString();
+    const sgst = (inv.sgstMinor ?? 0n).toString();
+    const totalTax = ((inv.cgstMinor ?? 0n) + (inv.sgstMinor ?? 0n) + (inv.igstMinor ?? 0n)).toString();
+    const date = (inv.createdAt instanceof Date ? inv.createdAt : new Date(inv.createdAt)).toISOString().slice(0, 10);
+
+    const bytes = buildTaxInvoicePdf({
+      number: inv.number,
+      date,
+      periodLabel: inv.periodStart ? `${inv.periodStart}${inv.periodEnd ? ` to ${inv.periodEnd}` : ''}` : null,
+      supplierName: landlord?.name ?? 'Landlord',
+      supplierGstin: inv.supplierGstin ?? '',
+      recipientName: tenant?.name ?? 'Tenant',
+      recipientGstin: inv.recipientGstin,
+      propertyName: property?.name ?? 'Property',
+      placeOfSupply: inv.placeOfSupply ?? '',
+      hsnSac: inv.hsnSac ?? '997212',
+      taxableMinor: (inv.taxableMinor ?? 0n).toString(),
+      cgstMinor: cgst,
+      sgstMinor: sgst,
+      igstMinor: igst,
+      totalTaxMinor: totalTax,
+      grossMinor: inv.amountMinor.toString(),
+      rateBps: inv.gstRateBps,
+      interState: (inv.igstMinor ?? 0n) > 0n,
+    });
+    return { bytes, fileName: `tax-invoice-${inv.number}.pdf`, tenancyId: inv.tenancyId };
+  }
+
+  private async computeGstFor(
+    input: CreateGstInvoiceDto,
+  ): Promise<{ tenancy: TenancyRow; amount: Money; rentPreview: InvoicePreviewDto; gst: GstBreakdown }> {
+    if (!isValidGstin(input.supplierGstin)) throw new BadRequestException('Invalid supplier GSTIN');
+    const { tenancy, amount, preview } = await this.computeRent(input);
+    const interState = isInterState(input.supplierGstin, input.placeOfSupply);
+    const rateBps = input.gstRateBps ?? 1800;
+    const gst = computeGst({ taxableMinor: amount.amountMinor, rateBps, interState });
+    return { tenancy, amount, rentPreview: preview, gst };
   }
 
   async applyLateFee(input: ApplyLateFeeDto): Promise<LateFeeResultDto> {
