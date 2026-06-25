@@ -1,5 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Download, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { TenancyGate } from '@/components/app/tenancy-gate';
 import {
   Badge,
@@ -18,7 +18,7 @@ import {
   useRun,
 } from '@/components/dashboard/primitives';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/lib/api';
+import { apiDownload, apiFetch } from '@/lib/api';
 import { formatINR, rupeesToMinor, shortId, titleCase } from '@/lib/format';
 import { useWorkspace } from '@/lib/workspace';
 
@@ -43,6 +43,15 @@ interface Payment {
   advance: Money;
   journalEntryId?: string | null;
 }
+interface PaymentHistoryRow {
+  id: string;
+  method: string;
+  amountMinor: string;
+  tdsMinor: string;
+  status: string;
+  reference: string | null;
+  receivedAt: string;
+}
 
 export function PaymentsPage() {
   const { canManage } = useWorkspace();
@@ -65,7 +74,16 @@ function PaymentsBody({ tenancyId, canManage }: { tenancyId: string; canManage: 
   const [allocs, setAllocs] = useState<{ invoiceId: string; amount: string }[]>([]);
   const [confirm, setConfirm] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [history, setHistory] = useState<PaymentHistoryRow[]>([]);
   const { busy, error, setError, run } = useRun();
+
+  const loadHistory = useCallback(async () => {
+    setHistory(await apiFetch<PaymentHistoryRow[]>(`/tenancies/${tenancyId}/payments`).catch(() => []));
+  }, [tenancyId]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   function validateAndOpen() {
     setError(null);
@@ -107,6 +125,7 @@ function PaymentsBody({ tenancyId, canManage }: { tenancyId: string; canManage: 
         }),
       });
       setPayments((prev) => [res, ...prev]);
+      await loadHistory();
     });
     if (ok) {
       setConfirm(false);
@@ -215,6 +234,39 @@ function PaymentsBody({ tenancyId, canManage }: { tenancyId: string; canManage: 
           keyOf={(p) => p.id}
           empty="Allocations appear here after recording a payment."
         />
+      </Card>
+
+      <Card title="Payment history & receipts">
+        <DataTable
+          columns={[
+            { header: 'Date', render: (p: PaymentHistoryRow) => p.receivedAt?.slice(0, 10) },
+            { header: 'Method', render: (p: PaymentHistoryRow) => titleCase(p.method) },
+            { header: 'Amount', align: 'right', render: (p: PaymentHistoryRow) => formatINR(p.amountMinor) },
+            {
+              header: 'TDS',
+              align: 'right',
+              render: (p: PaymentHistoryRow) => (p.tdsMinor && p.tdsMinor !== '0' ? formatINR(p.tdsMinor) : '—'),
+            },
+            { header: 'Status', render: (p: PaymentHistoryRow) => <StatusBadge status={p.status} /> },
+            {
+              header: 'Receipt',
+              align: 'right',
+              render: (p: PaymentHistoryRow) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void apiDownload(`/payments/${p.id}/receipt.pdf`, `rent-receipt-${shortId(p.id)}.pdf`)}
+                >
+                  <Download className="size-3.5" /> PDF
+                </Button>
+              ),
+            },
+          ]}
+          rows={history}
+          keyOf={(p) => p.id}
+          empty="No payments recorded yet."
+        />
+        <p className="mt-3 text-xs text-white/30">Receipts are HRA-ready and include the landlord PAN when on file.</p>
       </Card>
 
       <Modal

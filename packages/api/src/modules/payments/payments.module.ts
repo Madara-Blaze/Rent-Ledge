@@ -5,11 +5,12 @@ import { TenancyModule } from '../tenancy/tenancy.module';
 import { MockPaymentGateway } from './mock-gateway.adapter';
 import { PAYMENT_GATEWAY } from './payment-gateway.adapter';
 import { PaymentsController } from './payments.controller';
+import { PaymentsReadController } from './payments-read.controller';
 import { PaymentsService } from './payments.service';
 
 @Module({
   imports: [LedgerModule, TenancyModule, RbacModule],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, PaymentsReadController],
   providers: [
     PaymentsService,
     // Swap MockPaymentGateway for a live adapter (Razorpay/Stripe) to go to production.

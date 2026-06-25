@@ -15,6 +15,7 @@ import { MaintenancePage } from '@/pages/app/maintenance';
 import { EvidencePage } from '@/pages/app/evidence';
 import { DisputesPage } from '@/pages/app/disputes';
 import { ReportsPage } from '@/pages/app/reports';
+import { RemindersPage } from '@/pages/app/reminders';
 import { TeamPage } from '@/pages/app/team';
 import { AuditPage } from '@/pages/app/audit';
 import { TenancyOverviewPage } from '@/pages/app/tenancy/overview';
@@ -22,6 +23,7 @@ import { BillingPage } from '@/pages/app/tenancy/billing';
 import { PaymentsPage } from '@/pages/app/tenancy/payments';
 import { DepositPage } from '@/pages/app/tenancy/deposit';
 import { AgreementsPage } from '@/pages/app/tenancy/agreements';
+import { DocumentsPage } from '@/pages/app/tenancy/documents';
 import { NoticesPage } from '@/pages/app/tenancy/notices';
 import { HouseRulesPage } from '@/pages/app/tenancy/house-rules';
 import { InspectionsPage } from '@/pages/app/tenancy/inspections';
@@ -65,6 +67,7 @@ export default function App() {
             <Route path="evidence" element={<EvidencePage />} />
             <Route path="disputes" element={<DisputesPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="reminders" element={<RemindersPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="audit" element={<AuditPage />} />
             <Route path="t/overview" element={<TenancyOverviewPage />} />
@@ -72,6 +75,7 @@ export default function App() {
             <Route path="t/payments" element={<PaymentsPage />} />
             <Route path="t/deposit" element={<DepositPage />} />
             <Route path="t/agreements" element={<AgreementsPage />} />
+            <Route path="t/documents" element={<DocumentsPage />} />
             <Route path="t/notices" element={<NoticesPage />} />
             <Route path="t/house-rules" element={<HouseRulesPage />} />
             <Route path="t/inspections" element={<InspectionsPage />} />

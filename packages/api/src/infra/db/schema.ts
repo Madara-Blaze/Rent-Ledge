@@ -637,6 +637,31 @@ export const notificationLog = pgTable(
   (t) => [index('ix_notification_landlord').on(t.landlordId)],
 );
 
+export const leaseDocuments = pgTable(
+  'lease_documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    landlordId: uuid('landlord_id').notNull(),
+    tenancyId: uuid('tenancy_id').notNull(),
+    agreementId: uuid('agreement_id'),
+    kind: text('kind').notNull().default('LEASE'),
+    fileName: text('file_name').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'bigint' }).notNull(),
+    storageKey: text('storage_key').notNull(),
+    sha256: text('sha256').notNull(),
+    signedAt: tsz('signed_at'),
+    signedBy: text('signed_by'),
+    notes: text('notes'),
+    uploadedBy: uuid('uploaded_by').notNull(),
+    createdAt: tsz('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('ix_lease_documents_tenancy').on(t.tenancyId),
+    index('ix_lease_documents_landlord').on(t.landlordId),
+  ],
+);
+
 // ---- Phase 6: compliance ----
 
 export const consents = pgTable(

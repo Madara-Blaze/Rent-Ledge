@@ -17,6 +17,21 @@ interface IncomeStatement {
   period: string;
   totalIncomeMinor: string;
 }
+interface TenancyRow {
+  id: string;
+  propertyId: string;
+  status: string;
+  endDate: string | null;
+}
+interface Expiry {
+  tenancyId: string;
+  propertyName: string;
+  endDate: string;
+  daysLeft: number;
+}
+
+const ENDED = new Set(['TERMINATED', 'ENDED', 'EVICTED']);
+const EXPIRY_WINDOW_DAYS = 60;
 
 export function DashboardHome() {
   const { user } = useAuth();
@@ -24,6 +39,7 @@ export function DashboardHome() {
   const [income, setIncome] = useState<IncomeStatement | null>(null);
   const [deposits, setDeposits] = useState<DepositsSummary | null>(null);
   const [tds, setTds] = useState<TdsSummary | null>(null);
+  const [expiries, setExpiries] = useState<Expiry[]>([]);
 
   useEffect(() => {
     if (!landlordId) return;
@@ -31,8 +47,24 @@ export function DashboardHome() {
       setIncome(await apiFetch<IncomeStatement>(`/workspaces/${landlordId}/reports/income-statement`).catch(() => null));
       setDeposits(await apiFetch<DepositsSummary>(`/workspaces/${landlordId}/reports/deposits-summary`).catch(() => null));
       setTds(await apiFetch<TdsSummary>(`/workspaces/${landlordId}/reports/tds-summary`).catch(() => null));
+
+      const rows = await apiFetch<TenancyRow[]>(`/workspaces/${landlordId}/tenancies`).catch(() => []);
+      const todayMs = Date.now();
+      const nameFor = (pid: string) => properties.find((p) => p.id === pid)?.name ?? 'Property';
+      setExpiries(
+        rows
+          .filter((t) => t.endDate && !ENDED.has(t.status))
+          .map((t) => ({
+            tenancyId: t.id,
+            propertyName: nameFor(t.propertyId),
+            endDate: t.endDate as string,
+            daysLeft: Math.ceil((new Date(t.endDate as string).getTime() - todayMs) / 86_400_000),
+          }))
+          .filter((e) => e.daysLeft <= EXPIRY_WINDOW_DAYS)
+          .sort((a, b) => a.daysLeft - b.daysLeft),
+      );
     })();
-  }, [landlordId]);
+  }, [landlordId, properties]);
 
   const active = tenancies.filter((t) => t.status === 'ACTIVE').length;
 
@@ -82,6 +114,27 @@ export function DashboardHome() {
               rows={tenancies}
               keyOf={(t) => t.id}
               empty="No tenancies yet — create one under Tenancies."
+            />
+          </Card>
+
+          <Card title="Upcoming lease expiries">
+            <DataTable
+              columns={[
+                { header: 'Property', render: (e: Expiry) => e.propertyName },
+                { header: 'Ends', render: (e: Expiry) => e.endDate },
+                {
+                  header: '',
+                  align: 'right',
+                  render: (e: Expiry) => (
+                    <span className={e.daysLeft <= 0 ? 'text-[#ff8f8f]' : e.daysLeft <= 14 ? 'text-amber-300' : 'text-white/60'}>
+                      {e.daysLeft <= 0 ? 'Lapsed' : `${e.daysLeft} day${e.daysLeft === 1 ? '' : 's'} left`}
+                    </span>
+                  ),
+                },
+              ]}
+              rows={expiries}
+              keyOf={(e) => e.tenancyId}
+              empty={`No leases ending in the next ${EXPIRY_WINDOW_DAYS} days.`}
             />
           </Card>
         </div>
