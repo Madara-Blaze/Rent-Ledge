@@ -64,7 +64,7 @@ async function bootstrap(): Promise<void> {
   }
 
   const port = config.get<number>('PORT') ?? 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0'); // bind all interfaces for container hosts (Render, etc.)
   // eslint-disable-next-line no-console
   console.log(`RentLedger API listening on http://localhost:${port}${isProd ? '' : '  (Swagger UI: /docs)'}`);
 }

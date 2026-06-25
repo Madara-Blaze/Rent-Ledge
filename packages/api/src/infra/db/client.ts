@@ -5,7 +5,19 @@ import { schema } from './schema';
 export type Db = NodePgDatabase<typeof schema>;
 
 export function createPool(connectionString: string): Pool {
-  return new Pool({ connectionString });
+  // Supabase (and any sslmode=require URL) requires TLS. node-postgres does not
+  // reliably infer SSL from the URL alone, so enable it explicitly when the
+  // target looks like a TLS/Supabase endpoint; localhost stays plaintext for dev.
+  // SECURITY: rejectUnauthorized:false trusts the pooler cert without chain
+  // verification — for full hardening, pin Supabase's CA and set it to true.
+  const wantsTls =
+    /sslmode=(require|verify-ca|verify-full)/.test(connectionString) ||
+    /supabase\.(co|com|net)/.test(connectionString);
+  return new Pool({
+    connectionString,
+    ...(wantsTls ? { ssl: { rejectUnauthorized: false } } : {}),
+    max: Number(process.env.PG_POOL_MAX ?? 10),
+  });
 }
 
 export function createDb(pool: Pool): Db {

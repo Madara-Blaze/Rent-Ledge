@@ -1,0 +1,38 @@
+# Render blueprint for the RentLedger API (NestJS).
+# Create it: render.com → New → Blueprint → connect this repo → apply.
+# Render reads this file, provisions the service, and prompts for the
+# `sync: false` secrets below. The web frontend stays on Vercel and points at
+# this service via VITE_API_URL.
+services:
+  - type: web
+    name: rentledger-api
+    runtime: node
+    region: singapore # closest Render region to the Supabase ap-northeast-1 (Tokyo) DB
+    plan: free
+    rootDir: .
+    healthCheckPath: /v1/health
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @rentledger/api build
+    startCommand: node packages/api/dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      # ---- Secrets: set these in the Render dashboard when prompted ----
+      # Supabase SESSION pooler URL (port 5432), incl. password + sslmode=require:
+      #   postgresql://postgres.jysnhitakrkaptbibafm:<DB_PASSWORD>@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      # Strong, DISTINCT secrets (>=32 chars). Generate with:
+      #   openssl rand -hex 32        (JWT secrets)
+      #   openssl rand -base64 32     (FIELD_ENCRYPTION_KEY — AES-256 key)
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      # Comma-separated allowlist of the Vercel site origin(s), e.g.
+      #   https://rent-ledge.vercel.app,https://rent-ledge-<you>.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
