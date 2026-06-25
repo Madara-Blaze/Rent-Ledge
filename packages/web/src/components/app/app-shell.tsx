@@ -13,12 +13,14 @@ import {
   LogOut,
   Mail,
   Menu,
+  Moon,
   Percent,
   PiggyBank,
   Receipt,
   Scale,
   ScrollText,
   ShieldCheck,
+  Sun,
   UserCog,
   Users,
   Wallet,
@@ -27,7 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BrandMark } from '@/components/brand-mark';
 import { VideoBackground } from './video-background';
@@ -134,8 +136,15 @@ export function AppShell() {
   const { user, logout } = useAuth();
   const { workspaceName, landlordId, isTenantOnly, isAdmin, roles } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(
+    () => (localStorage.getItem('rl_theme') as 'dark' | 'light' | null) ?? 'dark',
+  );
   const location = useLocation();
   const close = () => setOpen(false);
+
+  useEffect(() => {
+    localStorage.setItem('rl_theme', theme);
+  }, [theme]);
 
   const sidebar: ReactNode = (
     <div className="flex h-full flex-col">
@@ -173,24 +182,24 @@ export function AppShell() {
   );
 
   return (
-    <div className="relative min-h-screen text-white">
-      <VideoBackground />
+    <div className={`rl-app relative min-h-screen text-white ${theme === 'dark' ? 'dark' : ''}`}>
+      {theme === 'dark' && <VideoBackground />}
 
       {/* desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-white/10 bg-black/50 backdrop-blur-xl lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-white/10 bg-[#fff]/80 backdrop-blur-xl lg:block dark:bg-black/50">
         {sidebar}
       </aside>
 
       {/* mobile sidebar overlay */}
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={close} />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-white/10 bg-black/85 backdrop-blur-xl">{sidebar}</aside>
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={close} />
+          <aside className="absolute inset-y-0 left-0 w-64 border-r border-white/10 bg-[#fff]/95 backdrop-blur-xl dark:bg-black/85">{sidebar}</aside>
         </div>
       )}
 
       <div className="lg:pl-60">
-        <header className="sticky top-0 z-20 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-white/10 bg-[#fff]/70 backdrop-blur-xl dark:bg-black/40">
           <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
               <button
@@ -205,6 +214,14 @@ export function AppShell() {
               </span>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+                className="rounded-full border border-white/15 p-2 text-white/60 transition-colors hover:text-white hover:bg-white/[0.06]"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              >
+                {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </button>
               <span className="hidden text-sm text-white/50 sm:inline">{user?.name}</span>
               <Button variant="outline" size="sm" onClick={() => void logout()}>
                 <LogOut className="size-4" /> Sign out

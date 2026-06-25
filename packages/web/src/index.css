@@ -96,6 +96,27 @@
   --ring: oklch(0.556 0 0);
 }
 
+/* ============================================================================
+   App light theme (scoped to .rl-app, applied by AppShell). The app UI is
+   authored dark-first with literal black/white Tailwind utilities layered over
+   a video background. For light mode we invert that palette at the CSS-variable
+   level — text-white/border-white become dark ink, bg-black becomes paper — and
+   the AppShell drops the video for a soft neutral surface. The public landing /
+   login / signup pages live OUTSIDE .rl-app and are intentionally untouched.
+   ============================================================================ */
+.rl-app:not(.dark) {
+  --color-white: #15171c; /* ink   → text-white*, border-white* render dark */
+  --color-black: #ffffff; /* paper → bg-black* renders light */
+  background-color: #eef1f5;
+  color: #15171c;
+}
+.rl-app:not(.dark) ::-webkit-scrollbar-track {
+  background: #e6e9ee;
+}
+.rl-app:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #c4cad3;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

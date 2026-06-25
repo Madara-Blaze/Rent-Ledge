@@ -19,7 +19,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-white/10 bg-black/40 p-6 backdrop-blur-md ${className}`}>
+    <section className={`rounded-2xl border border-white/10 bg-[#fff]/85 backdrop-blur-md dark:bg-black/40 p-6 ${className}`}>
       {(title || action) && (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -48,7 +48,7 @@ export function Stat({
   return (
     <div
       className={`rounded-2xl border p-5 backdrop-blur-md ${
-        accent ? 'border-[#FF0000]/40 bg-[#FF0000]/10' : 'border-white/10 bg-black/40'
+        accent ? 'border-[#FF0000]/40 bg-[#FF0000]/10' : 'border-white/10 bg-[#fff]/85 dark:bg-black/40'
       }`}
     >
       <p className="text-xs uppercase tracking-wider text-white/40">{label}</p>
@@ -398,7 +398,7 @@ export function Modal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="animate-modal-in max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0a]/95 p-6 shadow-2xl backdrop-blur-xl">
+      <div className="animate-modal-in max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#fff]/98 p-6 shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/95">
         <div className="mb-4">
           <h3 className="text-base font-semibold text-white">{title}</h3>
           {description && <p className="mt-1 text-sm text-white/45">{description}</p>}
