@@ -54,6 +54,12 @@
   const COM = {}; ORDER.forEach((c, i) => COM[c] = PAL[i]);
   const NEUTRAL = "#cfd3dc", HOST = "#18295b", GOLD = "#c9a24a";
   const SCHOOL_PAL = ["#99292d", "#2e63b8", "#2f7d66", "#7a55a8", "#2b97b0", "#c76a3a", "#7f9a3a", "#c0578f", "#8c6a46", "#5f7fc9", "#4f5d75"];
+  /* Grades 11 and 12 are also known by their Cambridge names */
+  const GRADE_TAG = { 11: "AS Level", 12: "A Level" };
+  const GRADE_ALIASES = {
+    11: ["as", "as level", "as levels", "as-level", "aslevel", "cie as", "cambridge as", "cambridge as level", "grade 11", "class 11", "11", "11th", "cie", "cambridge", "cambridge international"],
+    12: ["a level", "a levels", "a-level", "alevel", "a2", "a2 level", "cie a level", "cambridge a level", "grade 12", "class 12", "12", "12th", "cie", "cambridge", "cambridge international"]
+  };
   /* Grade ramp: rose -> oxblood -> plum -> navy, young to senior */
   const RAMP = ["#f3d3d5", "#d8727a", "#99292d", "#5a2a5e", "#18295b"].map(h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)));
   const gradeColor = t => {
@@ -88,11 +94,11 @@
       const m = countBy(people, key);
       const gs = [...m.keys()].filter(k => /^g\d+$/.test(k)).map(k => +k.slice(1)).sort((a, b) => a - b);
       const lo = gs[0], hi = gs[gs.length - 1];
-      const items = gs.map(g => ({ key: "g" + g, label: "Grade " + g, sub: "Vidyashilp Academy, grade " + g, n: m.get("g" + g), color: gradeColor((g - lo) / Math.max(1, hi - lo)) }));
+      const items = gs.map(g => ({ key: "g" + g, label: "Grade " + g + (GRADE_TAG[g] ? " · " + GRADE_TAG[g] : ""), sub: "Vidyashilp Academy, grade " + g + (GRADE_TAG[g] ? " (" + GRADE_TAG[g] + ")" : ""), n: m.get("g" + g), color: gradeColor((g - lo) / Math.max(1, hi - lo)) }));
       if (m.has("EB")) items.push({ key: "EB", label: "Executive Board", n: m.get("EB"), color: GOLD });
       if (m.has("other")) items.push({ key: "other", label: "Visiting delegates & others", n: m.get("other"), color: NEUTRAL });
       const stops = [0, .25, .5, .75, 1].map(t => gradeColor(t)).join(",");
-      return { key, items, title: "Vidyashilp grades", unit: "seats", limit: 99, ramp: { css: `linear-gradient(90deg,${stops})`, a: "Grade " + lo, b: "Grade " + hi } };
+      return { key, items, title: "Vidyashilp grades", unit: "seats", limit: 99, ramp: { css: `linear-gradient(90deg,${stops})`, a: "Grade " + lo, b: "Grade " + hi + (GRADE_TAG[hi] ? " · " + GRADE_TAG[hi] : "") } };
     }
     const key = p => p.k;
     const m = countBy(people, key);
@@ -138,6 +144,11 @@
     const la = polar(a.r, a.a - CW * 1.1 / a.r), lb = polar(b.r, b.a + CW * 1.1 / b.r);
     d += `<text class="rowlab" x="${f1(la.x)}" y="${f1(la.y + 4)}" text-anchor="middle">${r.row}</text><text class="rowlab" x="${f1(lb.x)}" y="${f1(lb.y + 4)}" text-anchor="middle">${r.row}</text>`;
   });
+  const ha = rows.find(r => r.row === "HA");
+  if (ha) {
+    const h0 = ha.list[0], dq = polar(h0.r, h0.a - CW * 3.5 / h0.r);
+    d += `<g class="door" transform="translate(${f1(dq.x)},${f1(dq.y)})"><rect class="door-leaf" x="-4" y="-14" width="8" height="28" rx="1.5"/><path class="door-swing" d="M4 -14 A28 28 0 0 1 28 6"/><text class="entry" x="-10" y="4" text-anchor="end">ENTRANCE</text></g>`;
+  }
   const rowA = rows[rows.length - 1].list, eA = rowA[0], eB = rowA[rowA.length - 1];
   const ea = polar(eA.r, eA.a - CW * 2.3 / eA.r), eb2 = polar(eB.r, eB.a + CW * 2.3 / eB.r);
   d += `<text class="entry" x="${f1(ea.x)}" y="${f1(ea.y + 24)}" text-anchor="end">ENTRY →</text><text class="entry" x="${f1(eb2.x)}" y="${f1(eb2.y + 24)}">← ENTRY</text>`;
@@ -251,7 +262,7 @@
         <div class="sc-row"><dt>School</dt><dd>${esc(p.s)}</dd></div>
         <div class="sc-row"><dt>Committee</dt><dd>${com}</dd></div>
         <div class="sc-row"><dt>Portfolio</dt><dd class="port">${p.p ? esc(p.p) : `<span class="muted">Awaiting allocation</span>`}</dd></div>
-        <div class="sc-row reg"><dt>Registered</dt><dd>${esc(p.r)}</dd></div>
+        <div class="sc-row reg"><dt>Registered</dt><dd>${esc(p.r)}${p.g ? `<small class="cur">Grade ${p.g}${GRADE_TAG[p.g] ? " · " + GRADE_TAG[p.g] : ""}${p.cu === "IGCSE" ? " · IGCSE" : ""}</small>` : ""}</dd></div>
       </dl>`;
     const prev = r[o.si - 1], next = r[o.si + 1];
     const nb = (x, dir) => x ? `<button type="button" data-go="${x.id}"><b>${dir === "l" ? "← " + x.id : x.id + " →"}</b><span>${x.p ? esc(x.p.n) : "Empty"}</span></button>` : `<button type="button" disabled><b>${dir === "l" ? "← Wall" : "Wall →"}</b><span>End of row</span></button>`;
@@ -464,13 +475,19 @@
     const out = [];
     const seat = byId[text.trim().toUpperCase().replace(/\s+/g, "")];
     if (seat) out.push({ kind: "Seat", seat });
+    const tg = t.replace(/[-\s]+/g, " ");
+    Object.keys(GRADE_ALIASES).forEach(g => {
+      const n = people.filter(o => o.p.g === +g).length;
+      if (n && GRADE_ALIASES[g].some(a => { const an = a.replace(/[-\s]+/g, " "); return tg === an || (tg.length >= 3 && an.startsWith(tg)); })) out.push({ kind: "Grade", grade: +g, n });
+    });
     ORDER.filter(c => comCount.has(c) && (norm(c).startsWith(t) || (t.length > 3 && norm(META[c].full).includes(t)))).forEach(c => out.push({ kind: "Committee", com: c, n: comCount.get(c) }));
     const wordStart = s => norm(s).split(/[\s.]+/).some(w => w.startsWith(t));
     const nameHits = people.filter(o => norm(o.p.n).includes(t)).sort((a, b) => (wordStart(b.p.n) - wordStart(a.p.n)) || a.p.n.localeCompare(b.p.n));
     nameHits.slice(0, 8).forEach(o => out.push({ kind: "Delegate", seat: o }));
     schoolList.filter(([sname]) => norm(sname).includes(t)).slice(0, 4).forEach(([sname, n]) => out.push({ kind: "School", school: sname, n }));
+    if (t.length >= 4) delegates.filter(o => o.p.cu && norm(o.p.cu).replace(/\s+/g, "").startsWith(tg.replace(/ /g, "")) && !nameHits.includes(o)).slice(0, 10).forEach(o => out.push({ kind: "Delegate", seat: o }));
     if (out.length < 12) delegates.filter(o => norm(o.p.p).includes(t) && !nameHits.includes(o)).slice(0, 12 - out.length).forEach(o => out.push({ kind: "Portfolio", seat: o }));
-    return out.slice(0, 16);
+    return out.slice(0, 18);
   }
   function renderResults() {
     if (!q.value.trim()) { res.hidden = true; q.setAttribute("aria-expanded", "false"); return; }
@@ -482,6 +499,7 @@
         const p = h.seat.p; code = h.seat.id; main = p ? p.n : "Empty seat";
         sub = !p ? "" : h.kind === "Portfolio" ? `${p.p} · ${p.c || "awaiting committee"}` : p.k === "EB" ? `${p.p} · ${p.c}` : `${p.s}${p.c ? " · " + p.c : ""}`;
       } else if (h.school) { code = h.n; main = h.school; sub = `Light up all ${h.n} seats`; }
+      else if (h.grade) { code = h.n; main = "Grade " + h.grade + " · " + GRADE_TAG[h.grade]; sub = `Cambridge ${GRADE_TAG[h.grade]} · light up all ${h.n} seats`; }
       else { code = h.n; main = h.com; sub = META[h.com].full; }
       return `<button type="button" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span class="r-code">${esc(code)}</span><span class="r-main"><strong>${esc(main)}</strong><small>${esc(sub)}</small></span><span class="tag ${h.kind === "Delegate" || h.kind === "Seat" ? "" : "tag--red"}">${h.kind}</span></button>`;
     }).join("");
@@ -495,7 +513,8 @@
       if (state.focus) { state.focus = null; applyScheme(); renderLegend(false); }
       select(h.seat);
       toMap(() => zoomTo(h.seat));
-    } else if (h.school) focusGroup("school", h.school);
+    } else if (h.grade) focusGroup("grade", "g" + h.grade);
+    else if (h.school) focusGroup("school", h.school);
     else if (h.com) focusGroup("committee", h.com);
   }
   function focusGroup(mode, key) {

@@ -59,10 +59,17 @@ for r in wb["Seating – Final"].iter_rows(min_row=2, values_only=True):
         kind, reg_out = ("Host" if school(sch) == "Vidyashilp Academy" else "Delegation"), "Class " + reg
     people[seat] = {"n": name, "s": school(sch), "c": COMMITTEE_FIX.get(com, com) or "", "p": port,
                     "r": reg_out, "k": kind}
-    # Vidyashilp students only: grade number from "7-B" / "IG10-A" style class codes
-    gm = re.match(r"^(?:IG)?(\d{1,2})\b", reg) if kind == "Host" else None
-    if gm:
-        people[seat]["g"] = int(gm.group(1))
+    # Vidyashilp students only. Class codes: "7-B", "IG10-A" (IGCSE), "AS-A" (AS Level, grade 11), "A-B" (A Level, grade 12)
+    if kind == "Host":
+        gm = re.match(r"^(IG)?(\d{1,2})\b", reg)
+        if gm:
+            people[seat]["g"] = int(gm.group(2))
+            if gm.group(1):
+                people[seat]["cu"] = "IGCSE"
+        elif re.match(r"^AS-", reg, re.I):
+            people[seat]["g"], people[seat]["cu"] = 11, "AS Level"
+        elif re.match(r"^A-", reg, re.I):
+            people[seat]["g"], people[seat]["cu"] = 12, "A Level"
 
 com = None
 for r in wb["EB "].iter_rows(min_row=2, values_only=True):
