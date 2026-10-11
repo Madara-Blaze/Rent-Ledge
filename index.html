@@ -1,0 +1,147 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#18295b"><meta name="robots" content="noindex,nofollow"><title>SHILPMUN 2026 Seating</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Pinyon+Script&family=Tinos:ital,wght@1,400;1,700&display=swap"><link rel="stylesheet" href="assets/main.css"></head><body><div class="grain" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"><span id="progress"></span></div>
+
+<header class="topbar" id="topbar">
+  <div class="shell">
+    <a href="#top" class="wm" aria-label="SHILPMUN 2026, back to top"><span class="s">Shilp</span><span class="m">Mun</span><span class="y" aria-hidden="true">2026</span></a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#plan">Floor plan</a>
+      <a href="#committees">Committees</a>
+      <a href="#schools">Schools</a>
+      <button type="button" class="btn btn--solid" id="top-find"><span>Find a seat</span></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="shell">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-hero>Vidyashilp Academy Model United Nations Society <span class="eyebrow--red">•</span> Second Edition</p>
+          <h1 class="masthead masthead--left">
+            <span class="line-mask"><span class="mh-bold">Find</span></span>
+            <span class="mh-script">Your Seat</span>
+          </h1>
+          <p class="lede" data-hero>All 481 seats in the Vidyashilp Academy auditorium, each with its delegate's name, school, committee and portfolio. Search for a name, a school, a country or a seat number.</p>
+          <div class="finder" data-hero role="search">
+            <label class="finder-box" for="q">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Delegate, school, country or seat" aria-label="Search delegates, schools, portfolios or seats" aria-controls="results" aria-expanded="false" role="combobox" aria-autocomplete="list">
+              <span class="kbd" aria-hidden="true">/</span>
+            </label>
+            <div class="results" id="results" role="listbox" data-lenis-prevent hidden></div>
+          </div>
+          <div class="finder-eg" data-hero>
+            <span class="eyebrow">Try</span>
+            <button type="button" class="filter" data-try="K5">K5</button>
+            <button type="button" class="filter" data-try="Oasis">Oasis</button>
+            <button type="button" class="filter" data-try="DISEC">DISEC</button>
+            <button type="button" class="filter" data-try="Japan">Japan</button>
+          </div>
+        </div>
+        <figure class="hero-plate plate" id="hero-plate">
+          <div class="ph">
+            <img src="assets/auditorium.jpg" alt="The Vidyashilp Academy auditorium seen from the stage: tiered red seats split by a centre aisle.">
+            <div class="stamp"><b>The Auditorium</b><span>Stage · Rows A to Q</span></div>
+          </div>
+          <figcaption><span>Seen from the stage, where row A begins.</span><span>29–31 Oct 2026</span></figcaption>
+        </figure>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+
+  <section class="sec" id="plan" aria-labelledby="plan-title">
+    <div class="shell">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow eyebrow--red">Seat allocation · Final</p>
+        <h2 class="masthead masthead--inline" id="plan-title"><span class="line-mask"><span class="mh-bold">The</span></span><span class="mh-script">Floor Plan</span></h2>
+        <hr class="rule" data-rule>
+        <p class="lede">The stage is at the bottom and seat 1 is the far-left seat in each row. Tap a seat to see who sits there, or pick a committee or school to light up its seats.</p>
+      </header>
+
+      <div class="plan-grid">
+        <div class="plan-main">
+          <div class="plan-tools">
+            <div class="modes" role="group" aria-label="Colour seats by">
+              <span class="eyebrow">Colour by</span>
+              <button type="button" class="filter" id="m-committee" data-mode="committee" aria-pressed="true">Committee</button>
+              <button type="button" class="filter" id="m-school" data-mode="school" aria-pressed="false">School</button>
+              <button type="button" class="filter" id="m-type" data-mode="type" aria-pressed="false">Delegate type</button>
+            </div>
+            <div class="focus-note" id="focus-note" aria-live="polite"></div>
+          </div>
+          <div class="map plate" id="map" tabindex="0" aria-label="Auditorium seat plan. Stage at the bottom. Arrow keys move between seats; plus and minus zoom.">
+            <svg id="svg" aria-hidden="true">
+              <g id="vp"><g id="deco"></g><g id="seats"></g><circle id="ring" class="ring" r="14" visibility="hidden"></circle></g>
+            </svg>
+            <div class="zoom">
+              <button type="button" id="zin" aria-label="Zoom in">+</button>
+              <button type="button" id="zout" aria-label="Zoom out">−</button>
+              <button type="button" id="zfit" aria-label="Show the whole hall"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
+            <div class="ctrl-hint" id="ctrl-hint">Hold Ctrl and scroll to zoom the plan</div>
+            <div class="tip" id="tip" hidden></div>
+          </div>
+          <p class="map-help" id="map-help">Drag to move · Ctrl + scroll or pinch to zoom · Arrow keys step seat to seat</p>
+        </div>
+
+        <aside class="plan-side" aria-label="Seat details and key">
+          <section class="seatcard plate" id="card" aria-live="polite" data-lenis-prevent></section>
+          <section class="legend" aria-labelledby="legend-title">
+            <div class="legend-head"><span class="eyebrow" id="legend-title">Committees</span><button type="button" id="clear" hidden>Show all</button></div>
+            <div class="chips" id="chips" data-lenis-prevent></div>
+            <button type="button" class="link-arrow legend-more" id="legend-more" hidden></button>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="committees" aria-labelledby="cmt-title" style="padding-top:0">
+    <div class="shell">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow eyebrow--red">Committees &amp; Executive Board</p>
+        <h2 class="masthead masthead--inline" id="cmt-title"><span class="line-mask"><span class="mh-bold">Every</span></span><span class="mh-script">Room</span></h2>
+        <hr class="rule" data-rule>
+        <p class="lede">Each card lists the committee's Executive Board, who sit in rows A and B. Open a card to light up every delegate in that committee on the plan.</p>
+      </header>
+      <div class="cmt-grid" id="cmt-grid"></div>
+    </div>
+  </section>
+
+  <section class="sec band" id="schools" aria-labelledby="sch-title">
+    <div class="shell">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow eyebrow--light">Delegations</p>
+        <h2 class="masthead masthead--inline masthead--light" id="sch-title"><span class="line-mask"><span class="mh-bold">By</span></span><span class="mh-script">School</span></h2>
+        <hr class="rule rule--light" data-rule>
+        <p class="lede">Schools are seated together. Find yours to see which rows it fills, then jump to them on the plan.</p>
+      </header>
+      <div class="schools" id="school-list"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div>
+        <span class="wm wm--light" aria-label="SHILPMUN 2026"><span class="s">Shilp</span><span class="m">Mun</span><span class="y" aria-hidden="true">2026</span></span>
+        <p>29, 30 &amp; 31 October 2026<br>Vidyashilp Academy, Yelahanka, Bengaluru</p>
+      </div>
+      <div>
+        <h4>Source</h4>
+        <p>Seat allocation by Naisha, Chief of Operations, from the <em>Seating – Final</em> and <em>EB</em> sheets.</p>
+      </div>
+      <div>
+        <h4>Share a seat</h4>
+        <p>Add a seat code to this page's link, such as <code>#K5</code>, and it opens straight on that seat.</p>
+      </div>
+    </div>
+    <div class="foot-base"><span>Every resolution is a conversation waiting to happen</span><span id="foot-count"></span></div>
+  </div>
+</footer><script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script><script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script><script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script><script src="assets/data.js"></script><script src="assets/app.js"></script></body></html>
