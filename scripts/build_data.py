@@ -1,5 +1,5 @@
 """Turn the SHILPMUN workbook into seat-map JSON + a compressed header photo."""
-import base64, io, json, sys, collections
+import base64, io, json, re, sys, collections
 import openpyxl
 from PIL import Image
 
@@ -59,6 +59,10 @@ for r in wb["Seating – Final"].iter_rows(min_row=2, values_only=True):
         kind, reg_out = ("Host" if school(sch) == "Vidyashilp Academy" else "Delegation"), "Class " + reg
     people[seat] = {"n": name, "s": school(sch), "c": COMMITTEE_FIX.get(com, com) or "", "p": port,
                     "r": reg_out, "k": kind}
+    # Vidyashilp students only: grade number from "7-B" / "IG10-A" style class codes
+    gm = re.match(r"^(?:IG)?(\d{1,2})\b", reg) if kind == "Host" else None
+    if gm:
+        people[seat]["g"] = int(gm.group(1))
 
 com = None
 for r in wb["EB "].iter_rows(min_row=2, values_only=True):

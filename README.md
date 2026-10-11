@@ -13,3 +13,7 @@ link can open it. Turn on Vercel "Deployment Protection" if you want it behind a
 ## Rebuilding the data
 
 `scripts/build_data.py <workbook.xlsx> <photo> <out.json> <out.txt>` regenerates the seating data from the delegate workbook (not stored in this repo).
+
+## Editing
+
+Readable sources are in `src/` (`app.js`, `main.css`). Run `scripts/build.sh` to minify them into `assets/`. The seat-curve radius is `R0` in `src/app.js`; the grade colour ramp is `RAMP`.
