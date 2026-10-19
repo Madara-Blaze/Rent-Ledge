@@ -381,8 +381,6 @@ h1, h2, h3, h4, p, dl, dd, figure { margin: 0; }
 .rm-com i { width: 10px; height: 10px; flex: none; outline: 1px solid var(--rule-dark); }
 .rm-full { display: block; margin-top: .3em; font: italic 400 .8rem/1.4 var(--f-body); color: var(--on-dark-mute); max-width: 34ch; }
 .rm-n { font: 900 1.05rem var(--f-display); color: var(--on-dark); font-variant-numeric: tabular-nums; }
-.rm-set { font: 500 .82rem/1.45 var(--f-brand); color: var(--on-dark-mute); max-width: 30ch; }
-.rm-note { display: block; margin-top: .4em; font: italic 400 .8rem/1.5 var(--f-body); color: var(--red-soft); }
 .rm-go { text-align: right; white-space: nowrap; }
 .rm-go .link-arrow { color: var(--red-soft); border-bottom-color: var(--rule-dark); }
 .rm-go .link-arrow:hover { border-bottom-color: var(--red-soft); }
@@ -400,10 +398,17 @@ h1, h2, h3, h4, p, dl, dd, figure { margin: 0; }
   .rooms td.rm-n { grid-column: 2; grid-row: 1; text-align: right; }
   .rooms td.rm-n::after { content: ' delegates'; font: 700 .55rem var(--f-brand); letter-spacing: .16em; text-transform: uppercase; color: var(--on-dark-mute); }
   .rooms td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
-  .rooms td.rm-set { grid-column: 1 / -1; grid-row: 3; max-width: none; }
-  .rooms td.rm-go { grid-column: 1 / -1; grid-row: 4; text-align: left; }
+  .rooms td.rm-go { grid-column: 1 / -1; grid-row: 3; text-align: left; }
   .rm-full { max-width: none; }
 }
 .rooms th:first-child { width: 24%; }
-.rooms td:nth-child(2) { width: 30%; }
-.rooms td:nth-child(3) { width: 9%; }
+.rooms td:nth-child(2) { width: 38%; }
+.rooms td:nth-child(3) { width: 12%; }
+
+/* arrangement lives on the committee card, under the rooms */
+.cmt-setup { display: block; margin-top: .75em; font: 500 .78rem/1.45 var(--f-brand); color: var(--ink-mute); transition: color .5s var(--ease); }
+.cmt-setup b { display: block; margin-bottom: .2em; font: 800 .52rem var(--f-brand); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); transition: color .5s var(--ease); }
+.cmt-setup em { display: block; margin-top: .45em; font: italic 400 .8rem/1.5 var(--f-body); color: var(--red); transition: color .5s var(--ease); }
+.cmt:hover .cmt-setup { color: var(--on-dark-mute); }
+.cmt:hover .cmt-setup b { color: var(--on-dark-mute); }
+.cmt:hover .cmt-setup em { color: var(--red-soft); }

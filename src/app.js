@@ -750,7 +750,6 @@
         <th scope="row"><span class="rm-name">${esc(room)}</span>${moved ? `<span class="rm-flag">Day${mine.length > 1 ? "s" : ""} ${mine.join(" &amp; ")}${other.length ? " \u00b7 otherwise " + esc(other.join(", ")) : ""}</span>` : ""}</th>
         <td><span class="rm-com"><i style="background:${COM[c]}"></i>${esc(c)}</span><span class="rm-full">${esc((META[c] || {}).full || "")}</span></td>
         <td class="rm-n">${v.cap}</td>
-        <td class="rm-set">${esc(v.setup)}${v.note ? `<span class="rm-note">${esc(v.note)}</span>` : ""}</td>
         <td class="rm-go"><button type="button" class="link-arrow" data-com="${esc(c)}">Seats <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button></td>
       </tr>`;
     }).join("");
@@ -778,6 +777,7 @@
       ${roomsOf(c) ? (roomMoves(c)
         ? `<span class="cmt-rooms moves">${DAYS.map((d, i) => `<span><b>Day ${d.n}</b><i>${esc(roomsOf(c)[i])}</i></span>`).join("")}</span>`
         : `<span class="cmt-rooms same"><span><b>Days 1&ndash;3</b><i>${esc(roomsOf(c)[0])}</i></span></span>`) : ""}
+      ${VENUES[c] ? `<span class="cmt-setup"><b>Arrangement</b>${esc(VENUES[c].setup)}${VENUES[c].note ? `<em>${esc(VENUES[c].note)}</em>` : ""}</span>` : ""}
       ${board.length ? `<span class="cmt-eb">${board.map(o => `<span><b>${esc(o.p.n)}</b> · ${esc(rolesShort(o.p.p))} · ${o.id}</span>`).join("")}</span>` : ""}
       <span class="cmt-foot"><span class="tag">${n ? n + " delegates" : "Board only"}</span>${m.type ? `<span class="tag tag--red">${esc(m.type)}</span>` : ""}<span class="cmt-more">${n ? "On the plan" : "Board seats"} <span aria-hidden="true">→</span></span></span>
     </button>`;
