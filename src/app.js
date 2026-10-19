@@ -775,7 +775,9 @@
       <span class="cmt-abbr"><i style="background:${COM[c]}"></i>${esc(c)}</span>
       <span class="cmt-name">${esc(m.name)}</span>
       ${m.tag ? `<span class="cmt-agenda">${esc(m.tag)}</span>` : ""}
-      ${roomsOf(c) ? `<span class="cmt-rooms${roomMoves(c) ? " moves" : ""}">${DAYS.map((d, i) => `<span><b>Day ${d.n}</b><i>${esc(roomsOf(c)[i])}</i></span>`).join("")}</span>` : ""}
+      ${roomsOf(c) ? (roomMoves(c)
+        ? `<span class="cmt-rooms moves">${DAYS.map((d, i) => `<span><b>Day ${d.n}</b><i>${esc(roomsOf(c)[i])}</i></span>`).join("")}</span>`
+        : `<span class="cmt-rooms same"><span><b>Days 1&ndash;3</b><i>${esc(roomsOf(c)[0])}</i></span></span>`) : ""}
       ${board.length ? `<span class="cmt-eb">${board.map(o => `<span><b>${esc(o.p.n)}</b> · ${esc(rolesShort(o.p.p))} · ${o.id}</span>`).join("")}</span>` : ""}
       <span class="cmt-foot"><span class="tag">${n ? n + " delegates" : "Board only"}</span>${m.type ? `<span class="tag tag--red">${esc(m.type)}</span>` : ""}<span class="cmt-more">${n ? "On the plan" : "Board seats"} <span aria-hidden="true">→</span></span></span>
     </button>`;
