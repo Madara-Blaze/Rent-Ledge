@@ -28,6 +28,173 @@
     "PRESS": { pre: "Conference", name: "Press", full: "Press" }
   };
 
+  /* ---------- committee rooms (from the Operations room-allotment sheet) ---------- */
+  const DAYS = [{ n: 1, d: "29 Oct", day: "Thursday" }, { n: 2, d: "30 Oct", day: "Friday" }, { n: 3, d: "31 Oct", day: "Saturday" }];
+  const VENUES = {
+    "UNSC": {
+      "rooms": [
+        "IG 9 B",
+        "IG 9 B",
+        "IG 9 B"
+      ],
+      "cap": 25,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Addressing the legality of pre-emptive military action against non-state actors across sovereign borders",
+        "Reassessing the mandate, effectiveness and reform of UN peacekeeping operations in active conflict zones"
+      ]
+    },
+    "UNHRC": {
+      "rooms": [
+        "IG 9 A",
+        "IG 9 A",
+        "IG 9 A"
+      ],
+      "cap": 30,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Combating the arbitrary stripping of citizenship as a tool of political persecution and ethnic exclusion"
+      ]
+    },
+    "AIPPM": {
+      "rooms": [
+        "P 8",
+        "ShilpEncounter",
+        "P 8"
+      ],
+      "cap": 35,
+      "setup": "UK parliamentary arrangement, seated bloc-wise",
+      "note": "Day 2 shifts to ShilpEncounter (the P 8 PTM room): 30 seats, classroom arrangement with projector and mic system. Needs extra volunteers and operations capacity — it is a longer walk, so plan arrival, departure and lunch movement carefully.",
+      "agenda": [
+        "Examining how SIR has strengthened democratic accountability, paved the way for anti-incumbency, and created pathways for emerging political forces to challenge entrenched power across Indian states"
+      ]
+    },
+    "COP 31": {
+      "rooms": [
+        "IG 10 B",
+        "IG 10 B",
+        "IG 10 B"
+      ],
+      "cap": 30,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Reviewing a decade of the Paris Agreement: assessing national commitments, accountability gaps, and the path forward for accelerated climate action at COP 31"
+      ]
+    },
+    "CCC": {
+      "rooms": [
+        "IG 10 A",
+        "IG 10 A",
+        "IG 10 A"
+      ],
+      "cap": 30,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "The drawing of lines — negotiating the terms of Indian independence and the human cost of Partition, June 1947"
+      ]
+    },
+    "DISEC": {
+      "rooms": [
+        "P Dayananda Pai Auditorium",
+        "P Dayananda Pai Auditorium",
+        "P Dayananda Pai Auditorium"
+      ],
+      "cap": 80,
+      "setup": "Auditorium seating, tables on stage",
+      "note": "Three to four wireless mics to be passed around. Projector required.",
+      "agenda": [
+        "Developing an international legal framework for the regulation and accountability of lethal autonomous weapons systems",
+        "Establishing an international legal framework for state-sponsored cyber operations, critical infrastructure attacks and digital acts of war"
+      ]
+    },
+    "SOCHUM": {
+      "rooms": [
+        "AS Level A",
+        "AS Level A",
+        "AS Level A"
+      ],
+      "cap": 30,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Regulating the use of artificial intelligence in electoral processes and the protection of the right to free and informed political participation"
+      ]
+    },
+    "UNODC": {
+      "rooms": [
+        "AS Level B",
+        "AS Level B",
+        "AS Level B"
+      ],
+      "cap": 30,
+      "setup": "Classroom arrangement",
+      "agenda": [
+        "Addressing the exploitation of decentralised cryptocurrency infrastructure in transnational drug trafficking and terror financing",
+        "Examining the global shift toward drug decriminalisation, the public health versus criminal justice paradigm, and the future of international drug control treaties"
+      ]
+    },
+    "G20": {
+      "rooms": [
+        "IG 8 A",
+        "IG 8 A",
+        "IG 8 A"
+      ],
+      "cap": 21,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Addressing the geopolitical weaponisation of sovereign lending, debt-trap diplomacy, and the restructuring of global financial power in a multipolar world"
+      ]
+    },
+    "EU Council": {
+      "rooms": [
+        "IG 8 B",
+        "IG 8 B",
+        "IG 8 B"
+      ],
+      "cap": 27,
+      "setup": "Classroom arrangement",
+      "agenda": [
+        "Strengthening the architecture of economic interdependence — harmonising trade, investment and industrial policy across EU member states to build a more resilient and cohesive single market"
+      ]
+    },
+    "IPLA": {
+      "rooms": [
+        "Senior Library",
+        "Auditorium Lobby",
+        "Senior Library"
+      ],
+      "cap": 40,
+      "setup": "Four-person team tables in a zig-zag layout",
+      "note": "Day 2 moves to the Auditorium Lobby. Each table seats four.",
+      "agenda": [
+        "IPL Mega Auction 2026 — franchise strategy, player valuation and budget management"
+      ]
+    },
+    "FIA": {
+      "rooms": [
+        "A Level B",
+        "A Level B",
+        "A Level B"
+      ],
+      "cap": 33,
+      "setup": "Three-person team arrangement",
+      "agenda": [
+        "Debating regulatory reforms and financial frameworks in Formula One — where teams will contest rule changes, defend strategic decisions, and navigate crisis response in the fight for competitive supremacy"
+      ]
+    },
+    "NATO": {
+      "rooms": [
+        "A Level A",
+        "A Level A",
+        "A Level A"
+      ],
+      "cap": 29,
+      "setup": "Semi-circle arrangement",
+      "agenda": [
+        "Managing escalation in the Russia–Ukraine war: sustaining support to Ukraine, deterring Russian aggression, and the threshold for collective defence"
+      ]
+    }
+  };
+
   /* ---------- model ---------- */
   const CW = 26, RH = 32, AISLE_COL = 18;
   const rows = DATA.rows;               // back (Q) -> front (A)
@@ -110,6 +277,24 @@
     return L > 0.62 ? "dk" : "lt";
   }
 
+  /* room helpers */
+  const roomsOf = c => (VENUES[c] || {}).rooms || null;
+  const roomRuns = c => {           // ["IG 9 B","IG 9 B","IG 9 B"] -> [{room, days:[1,2,3]}]
+    const r = roomsOf(c); if (!r) return [];
+    const runs = [];
+    r.forEach((room, i) => {
+      const last = runs[runs.length - 1];
+      if (last && last.room === room) last.days.push(i + 1); else runs.push({ room, days: [i + 1] });
+    });
+    return runs;
+  };
+  const roomSummary = c => {
+    const runs = roomRuns(c); if (!runs.length) return "";
+    if (runs.length === 1) return runs[0].room + " \u00b7 all three days";
+    return runs.map(r => r.room + " (Day " + r.days.join(" & ") + ")").join(" \u00b7 ");
+  };
+  const roomMoves = c => roomRuns(c).length > 1;
+
   /* ---------- draw the hall ---------- */
   const deco = $("deco"), seatLayer = $("seats"), ring = $("ring"), vp = $("vp");
   const yA = (rows.length - 1) * RH;
@@ -175,6 +360,7 @@
   const nSchools = schoolCount.size, nComs = ORDER.filter(c => comCount.has(c) || ebBy[c]).length;
   $("stats").innerHTML = [[seats.length, "Seats"], [delegates.length, "Delegates"], [eb.length, "Executive Board"], [nComs, "Committees"], [nSchools, "Schools"]]
     .map(([n, l]) => `<div><div class="stat-v" data-n="${n}">${n}</div><div class="stat-l">${l}</div></div>`).join("");
+  (($e) => { if ($e) $e.textContent = seats.length; })($("hero-seats"));
   $("foot-count").textContent = `${seats.length} seats · ${delegates.length} delegates · ${eb.length} Executive Board`;
   const tick = ORDER.filter(c => comCount.has(c)).map(c => `<span>${esc(c)}<b>${comCount.get(c)}</b></span><span><i>✦</i></span>`).join("");
   $("marquee").innerHTML = `<div class="marquee-set">${tick}</div><div class="marquee-set">${tick}</div>`;
@@ -256,11 +442,12 @@
     let body;
     if (!p) body = `<h3 class="sc-name">Empty seat</h3>`;
     else if (p.k === "EB") body = `<h3 class="sc-name">${esc(p.n)}</h3><span class="tag tag--red sc-badge">Executive Board</span>
-      <dl class="sc-dl"><div class="sc-row"><dt>Role</dt><dd>${esc(p.p)}</dd></div><div class="sc-row"><dt>Committee</dt><dd>${com}</dd></div></dl>`;
+      <dl class="sc-dl"><div class="sc-row"><dt>Role</dt><dd>${esc(p.p)}</dd></div><div class="sc-row"><dt>Committee</dt><dd>${com}</dd></div>${p.c && roomsOf(p.c) ? `<div class="sc-row"><dt>Room</dt><dd>${esc(roomRuns(p.c)[0].room)}<small>${esc(roomMoves(p.c) ? roomSummary(p.c) : "All three days")}</small></dd></div>` : ""}</dl>`;
     else body = `<h3 class="sc-name">${esc(p.n)}</h3>
       <dl class="sc-dl">
         <div class="sc-row"><dt>School</dt><dd>${esc(p.s)}</dd></div>
         <div class="sc-row"><dt>Committee</dt><dd>${com}</dd></div>
+        ${p.c && roomsOf(p.c) ? `<div class="sc-row"><dt>Room</dt><dd>${esc(roomRuns(p.c)[0].room)}${roomMoves(p.c) ? `<small>${esc(roomSummary(p.c))}</small>` : `<small>All three days</small>`}</dd></div>` : ""}
         <div class="sc-row"><dt>Portfolio</dt><dd class="port">${p.p ? esc(p.p) : `<span class="muted">Awaiting allocation</span>`}</dd></div>
         <div class="sc-row reg"><dt>Registered</dt><dd>${esc(p.r)}${p.g ? `<small class="cur">Grade ${p.g}${GRADE_TAG[p.g] ? " · " + GRADE_TAG[p.g] : ""}${p.cu === "IGCSE" ? " · IGCSE" : ""}</small>` : ""}</dd></div>
       </dl>`;
@@ -480,6 +667,10 @@
       const n = people.filter(o => o.p.g === +g).length;
       if (n && GRADE_ALIASES[g].some(a => { const an = a.replace(/[-\s]+/g, " "); return tg === an || (tg.length >= 3 && an.startsWith(tg)); })) out.push({ kind: "Grade", grade: +g, n });
     });
+    const roomNorm = r => norm(r).replace(/[^a-z0-9]/g, "");
+    const tRoom = t.replace(/[^a-z0-9]/g, "");
+    if (tRoom.length >= 2) ORDER.filter(c => VENUES[c] && !out.some(o => o.com === c) && VENUES[c].rooms.some(r => roomNorm(r).includes(tRoom)))
+      .forEach(c => out.push({ kind: "Room", com: c, n: comCount.get(c) || 0, room: roomSummary(c) }));
     ORDER.filter(c => comCount.has(c) && (norm(c).startsWith(t) || (t.length > 3 && norm(META[c].full).includes(t)))).forEach(c => out.push({ kind: "Committee", com: c, n: comCount.get(c) }));
     const wordStart = s => norm(s).split(/[\s.]+/).some(w => w.startsWith(t));
     const nameHits = people.filter(o => norm(o.p.n).includes(t)).sort((a, b) => (wordStart(b.p.n) - wordStart(a.p.n)) || a.p.n.localeCompare(b.p.n));
@@ -500,6 +691,7 @@
         sub = !p ? "" : h.kind === "Portfolio" ? `${p.p} · ${p.c || "awaiting committee"}` : p.k === "EB" ? `${p.p} · ${p.c}` : `${p.s}${p.c ? " · " + p.c : ""}`;
       } else if (h.school) { code = h.n; main = h.school; sub = `Light up all ${h.n} seats`; }
       else if (h.grade) { code = h.n; main = "Grade " + h.grade + " · " + GRADE_TAG[h.grade]; sub = `Cambridge ${GRADE_TAG[h.grade]} · light up all ${h.n} seats`; }
+      else if (h.kind === "Room") { code = h.n; main = h.com + " \u00b7 " + roomRuns(h.com)[0].room; sub = h.room; }
       else { code = h.n; main = h.com; sub = META[h.com].full; }
       return `<button type="button" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span class="r-code">${esc(code)}</span><span class="r-main"><strong>${esc(main)}</strong><small>${esc(sub)}</small></span><span class="tag ${h.kind === "Delegate" || h.kind === "Seat" ? "" : "tag--red"}">${h.kind}</span></button>`;
     }).join("");
@@ -545,6 +737,37 @@
 
   /* ---------- committee rooms ---------- */
   const rolesShort = r => r.replace("Chairperson", "Chair");
+  /* ---------- rooms reference ---------- */
+  let roomDay = 1;
+  function renderRooms() {
+    const list = ORDER.filter(c => VENUES[c]).map(c => ({ c, v: VENUES[c], room: VENUES[c].rooms[roomDay - 1] }))
+      .sort((a, b) => a.room.localeCompare(b.room, "en", { numeric: true }) || a.c.localeCompare(b.c));
+    $("rooms-body").innerHTML = list.map(({ c, v, room }) => {
+      const moved = roomMoves(c), runs = roomRuns(c);
+      const mine = runs.filter(r => r.room === room).reduce((a, r) => a.concat(r.days), []);
+      const other = [...new Set(runs.filter(r => r.room !== room).map(r => r.room))];
+      return `<tr${moved ? ' class="is-moved"' : ""}>
+        <th scope="row"><span class="rm-name">${esc(room)}</span>${moved ? `<span class="rm-flag">Day${mine.length > 1 ? "s" : ""} ${mine.join(" &amp; ")}${other.length ? " \u00b7 otherwise " + esc(other.join(", ")) : ""}</span>` : ""}</th>
+        <td><span class="rm-com"><i style="background:${COM[c]}"></i>${esc(c)}</span><span class="rm-full">${esc((META[c] || {}).full || "")}</span></td>
+        <td class="rm-n">${v.cap}</td>
+        <td class="rm-set">${esc(v.setup)}${v.note ? `<span class="rm-note">${esc(v.note)}</span>` : ""}</td>
+        <td class="rm-go"><button type="button" class="link-arrow" data-com="${esc(c)}">Seats <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button></td>
+      </tr>`;
+    }).join("");
+    const movers = ORDER.filter(c => VENUES[c] && roomMoves(c));
+    $("rooms-note").innerHTML = movers.length
+      ? `<strong>Rooms that change:</strong> ${movers.map(c => `${esc(c)} \u2014 ${esc(roomSummary(c))}`).join(" &nbsp;·&nbsp; ")}`
+      : "";
+    document.querySelectorAll(".days .filter").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.day === roomDay)));
+  }
+  document.querySelectorAll(".days .filter").forEach(b => b.addEventListener("click", () => {
+    if (+b.dataset.day === roomDay) return;
+    roomDay = +b.dataset.day; renderRooms();
+    if (G && !reduce) G.from("#rooms-body tr", { y: 10, opacity: 0, duration: .4, stagger: .02, ease: "power2.out", clearProps: "all" });
+  }));
+  $("rooms-body").addEventListener("click", e => { const b = e.target.closest("[data-com]"); if (b) focusGroup("committee", b.dataset.com); });
+  renderRooms();
+
   $("cmt-grid").innerHTML = ORDER.filter(c => comCount.has(c) || ebBy[c]).map(c => {
     const m = META[c] || { pre: "", name: c }, n = comCount.get(c) || 0, board = ebBy[c] || [];
     return `<button type="button" class="cmt" data-com="${esc(c)}" data-abbr="${esc(c)}" aria-label="${esc(m.full || c)}: show ${n} delegates on the plan">
@@ -552,6 +775,7 @@
       <span class="cmt-abbr"><i style="background:${COM[c]}"></i>${esc(c)}</span>
       <span class="cmt-name">${esc(m.name)}</span>
       ${m.tag ? `<span class="cmt-agenda">${esc(m.tag)}</span>` : ""}
+      ${roomsOf(c) ? `<span class="cmt-rooms${roomMoves(c) ? " moves" : ""}">${DAYS.map((d, i) => `<span><b>Day ${d.n}</b><i>${esc(roomsOf(c)[i])}</i></span>`).join("")}</span>` : ""}
       ${board.length ? `<span class="cmt-eb">${board.map(o => `<span><b>${esc(o.p.n)}</b> · ${esc(rolesShort(o.p.p))} · ${o.id}</span>`).join("")}</span>` : ""}
       <span class="cmt-foot"><span class="tag">${n ? n + " delegates" : "Board only"}</span>${m.type ? `<span class="tag tag--red">${esc(m.type)}</span>` : ""}<span class="cmt-more">${n ? "On the plan" : "Board seats"} <span aria-hidden="true">→</span></span></span>
     </button>`;

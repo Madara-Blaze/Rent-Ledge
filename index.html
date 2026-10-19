@@ -6,6 +6,7 @@
     <a href="#top" class="wm" aria-label="SHILPMUN 2026, back to top"><span class="s">Shilp</span><span class="m">Mun</span><span class="y" aria-hidden="true">2026</span></a>
     <nav class="topnav" aria-label="Sections">
       <a href="#plan">Floor plan</a>
+      <a href="#rooms">Rooms</a>
       <a href="#committees">Committees</a>
       <a href="#schools">Schools</a>
       <button type="button" class="btn btn--solid" id="top-find"><span>Find a seat</span></button>
@@ -23,7 +24,7 @@
             <span class="line-mask"><span class="mh-bold">Find</span></span>
             <span class="mh-script">Your Seat</span>
           </h1>
-          <p class="lede" data-hero>All 481 seats in the Vidyashilp Academy auditorium, each with its delegate's name, school, committee and portfolio. Search for a name, a school, a country or a seat number.</p>
+          <p class="lede" data-hero>All <span id="hero-seats">480</span> seats in the Vidyashilp Academy auditorium, each with its delegate's name, school, committee and portfolio. Search for a name, a school, a country or a seat number.</p>
           <div class="finder" data-hero role="search">
             <label class="finder-box" for="q">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -104,13 +105,36 @@
     </div>
   </section>
 
+  <section class="sec band" id="rooms" aria-labelledby="rooms-title">
+    <div class="shell">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow eyebrow--light">Operations &middot; 29&ndash;31 October</p>
+        <h2 class="masthead masthead--inline masthead--light" id="rooms-title"><span class="line-mask"><span class="mh-bold">Committee</span></span><span class="mh-script">Rooms</span></h2>
+        <hr class="rule rule--light" data-rule>
+        <p class="lede">Where every committee sits on each day of the conference, with its strength and the arrangement the room needs. Rooms that change between days are flagged.</p>
+      </header>
+      <div class="days" role="group" aria-label="Choose a conference day">
+        <span class="eyebrow eyebrow--light">Day</span>
+        <button type="button" class="filter filter--light" data-day="1" aria-pressed="true">Day 1 &middot; 29 Oct</button>
+        <button type="button" class="filter filter--light" data-day="2" aria-pressed="false">Day 2 &middot; 30 Oct</button>
+        <button type="button" class="filter filter--light" data-day="3" aria-pressed="false">Day 3 &middot; 31 Oct</button>
+      </div>
+      <div class="rooms-wrap"><table class="rooms" id="rooms-table">
+        <caption class="sr-only">Committee room allotment</caption>
+        <thead><tr><th scope="col">Room</th><th scope="col">Committee</th><th scope="col">Delegates</th><th scope="col">Arrangement</th><th scope="col"><span class="sr-only">Plan</span></th></tr></thead>
+        <tbody id="rooms-body"></tbody>
+      </table></div>
+      <p class="rooms-note" id="rooms-note"></p>
+    </div>
+  </section>
+
   <section class="sec" id="committees" aria-labelledby="cmt-title" style="padding-top:0">
     <div class="shell">
       <header class="sec-head" data-reveal>
         <p class="eyebrow eyebrow--red">Committees &amp; Executive Board</p>
         <h2 class="masthead masthead--inline" id="cmt-title"><span class="line-mask"><span class="mh-bold">Every</span></span><span class="mh-script">Room</span></h2>
         <hr class="rule" data-rule>
-        <p class="lede">Each card lists the committee's Executive Board, who sit in rows A and B. Open a card to light up every delegate in that committee on the plan.</p>
+        <p class="lede">Each card lists the committee's room for all three days and its Executive Board, who sit in rows A and B. Open a card to light up every delegate in that committee on the plan.</p>
       </header>
       <div class="cmt-grid" id="cmt-grid"></div>
     </div>

@@ -17,3 +17,7 @@ link can open it. Turn on Vercel "Deployment Protection" if you want it behind a
 ## Editing
 
 Readable sources are in `src/` (`app.js`, `main.css`). Run `scripts/build.sh` to minify them into `assets/`. The seat-curve radius is `R0` in `src/app.js`; the grade colour ramp is `RAMP`.
+
+## Committee rooms
+
+Room allotment for the three conference days lives in the `VENUES` block near the top of `src/app.js` (rooms, strength, arrangement and per-committee notes). Edit it there and run `scripts/build.sh`.

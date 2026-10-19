@@ -349,3 +349,42 @@ h1, h2, h3, h4, p, dl, dd, figure { margin: 0; }
 .door-leaf { fill: var(--red); }
 .door-swing { fill: none; stroke: var(--red); stroke-width: 1.2; stroke-dasharray: 2.5 2.5; opacity: .7; }
 .sc-row dd .cur { display: block; margin-top: .15rem; font: italic 400 .84rem/1.4 var(--f-body); color: var(--ink-mute); }
+
+/* ---------- committee rooms ---------- */
+.cmt-rooms { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; margin-top: .95em; padding-top: .9em; border-top: 1px solid var(--rule); transition: border-color .5s var(--ease); }
+.cmt-rooms > span { display: flex; flex-direction: column; gap: .25em; min-width: 0; }
+.cmt-rooms b { font: 800 .52rem var(--f-brand); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); transition: color .5s var(--ease); }
+.cmt-rooms i { font: 700 .74rem/1.25 var(--f-brand); font-style: normal; color: var(--navy); overflow-wrap: anywhere; transition: color .5s var(--ease); }
+.cmt-rooms.moves i { color: var(--red); }
+.cmt:hover .cmt-rooms { border-color: var(--rule-dark); }
+.cmt:hover .cmt-rooms b { color: var(--on-dark-mute); }
+.cmt:hover .cmt-rooms i { color: var(--on-dark); }
+.cmt:hover .cmt-rooms.moves i { color: var(--red-soft); }
+
+/* ---------- rooms reference table ---------- */
+.days { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: clamp(1rem, 2vw, 1.5rem); }
+.days .eyebrow { margin-right: .3rem; }
+.filter--light { border-color: var(--rule-dark); color: var(--on-dark-mute); background: rgba(255,255,255,.04); }
+.filter--light:hover { border-color: var(--on-dark); color: var(--on-dark); }
+.filter--light[aria-pressed="true"] { background: var(--paper); border-color: var(--paper); color: var(--navy); }
+.rooms-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--rule-dark); background: rgba(255,255,255,.04); }
+.rooms { width: 100%; border-collapse: collapse; min-width: 640px; }
+.rooms th, .rooms td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-dark); vertical-align: top; }
+.rooms thead th { font: 800 .56rem var(--f-brand); letter-spacing: .22em; text-transform: uppercase; color: var(--on-dark-mute); padding-block: .8rem; }
+.rooms tbody tr:last-child th, .rooms tbody tr:last-child td { border-bottom: 0; }
+.rooms tbody tr:hover { background: rgba(255,255,255,.05); }
+.rm-name { display: block; font: 900 1.05rem/1.2 var(--f-display); letter-spacing: -.01em; color: var(--on-dark); }
+.rm-flag { display: block; margin-top: .3em; font: 700 .55rem var(--f-brand); letter-spacing: .16em; text-transform: uppercase; color: var(--red-soft); }
+.rm-com { display: flex; align-items: center; gap: .5rem; font: 800 .88rem var(--f-brand); color: var(--on-dark); }
+.rm-com i { width: 10px; height: 10px; flex: none; outline: 1px solid var(--rule-dark); }
+.rm-full { display: block; margin-top: .3em; font: italic 400 .8rem/1.4 var(--f-body); color: var(--on-dark-mute); max-width: 34ch; }
+.rm-n { font: 900 1.05rem var(--f-display); color: var(--on-dark); font-variant-numeric: tabular-nums; }
+.rm-set { font: 500 .82rem/1.45 var(--f-brand); color: var(--on-dark-mute); max-width: 30ch; }
+.rm-note { display: block; margin-top: .4em; font: italic 400 .8rem/1.5 var(--f-body); color: var(--red-soft); }
+.rm-go { text-align: right; white-space: nowrap; }
+.rm-go .link-arrow { color: var(--red-soft); border-bottom-color: var(--rule-dark); }
+.rm-go .link-arrow:hover { border-bottom-color: var(--red-soft); }
+.rm-go svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.rooms-note { margin-top: 1.1rem; font: 500 .82rem/1.6 var(--f-brand); color: var(--on-dark-mute); }
+.rooms-note strong { color: var(--on-dark); font-weight: 800; }
+@media (max-width: 640px) { .rooms th, .rooms td { padding: .7rem .75rem; } }
